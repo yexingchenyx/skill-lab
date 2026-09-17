@@ -4,6 +4,6 @@
 
 // Tests for the `core` module.
 TEST(Core, Greeter) {
-    <namespace-macro>::core::Greeter greeter("world");
+    <namespace-macro>_NS::core::Greeter greeter("world");
     EXPECT_EQ(greeter.greet(), "Hello, world!");
 }

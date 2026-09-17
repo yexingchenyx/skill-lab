@@ -1,6 +1,6 @@
 #include "<project-name>/core/foo.hpp"
 
-namespace <namespace-macro>::core {
+namespace <namespace-macro>_NS::core {
 
 Greeter::Greeter(std::string name) : name_(std::move(name)) {}
 
@@ -8,4 +8,4 @@ std::string Greeter::greet() const {
     return "Hello, " + name_ + "!";
 }
 
-}  // namespace <namespace-macro>::core
+}  // namespace <namespace-macro>_NS::core

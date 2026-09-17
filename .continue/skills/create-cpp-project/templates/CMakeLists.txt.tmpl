@@ -22,6 +22,9 @@ target_link_libraries(${PROJECT_NAME}_lib INTERFACE
 add_library(${PROJECT_NAME}::${PROJECT_NAME}_lib ALIAS ${PROJECT_NAME}_lib)
 # Generated config header (from cmake/common.cmake)
 target_include_directories(${PROJECT_NAME}_lib INTERFACE ${<PROJECT_NAME_UPPER>_CONFIG_DIR})
+# CLI tools: cli/common provides a shared CLI utilities library
+# (links CLI11::CLI11 and the project aggregate lib).
+add_subdirectory(cli)
 # Enable tests. Google Test is fetched/loaded via cmake/thirdparty.cmake
 # when <PROJECT_NAME_UPPER>_BUILD_TESTS is ON.
 #

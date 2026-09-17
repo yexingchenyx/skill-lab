@@ -3,6 +3,8 @@
 # expose a namespaced target (e.g. re2::re2) per cmake/thirdparty/README.md.
 # Add one include() line per library you use.
 
+include(cli11)  # provides CLI11::CLI11 (command-line parsing, always on)
+
 if(<PROJECT_NAME_UPPER>_BUILD_TESTS)
   include(googletest)  # provides GTest::gtest_main
 endif()

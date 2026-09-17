@@ -1,0 +1,14 @@
+find_package(CLI11 QUIET)
+
+if(NOT CLI11_FOUND)
+  include(FetchContent)
+  FetchContent_Declare(
+    cli11
+    URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.4.2.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  )
+  FetchContent_MakeAvailable(cli11)
+endif()
+
+# CLI11 provides the namespaced target CLI11::CLI11 — nothing more to alias.
+# Consumers link: target_link_libraries(<target> PRIVATE CLI11::CLI11)

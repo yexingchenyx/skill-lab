@@ -5,7 +5,7 @@
 #include "<project-name>/config.h"
 #include "<project-name>/core/foo.hpp"
 
-namespace <namespace-macro>::algorithm {
+namespace <namespace-macro>_NS::algorithm {
 
 /// Sample utility for the `algorithm` module.
 /// Depends on the `core` module (e.g. uses core::Greeter).
@@ -13,4 +13,4 @@ std::string greet_sum(const std::string& name, int a, int b);
 
 int add(int a, int b);
 
-}  // namespace <namespace-macro>::algorithm
+}  // namespace <namespace-macro>_NS::algorithm

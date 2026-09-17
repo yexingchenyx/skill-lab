@@ -1,12 +1,13 @@
 ---
 name: create-cpp-project
-description: Create a new C++ project with CMake build system, modular src layout, and Google Test (default)
+description: Create a new C++ project with CMake build system, modular src layout, Google Test (default), and CLI11
 ---
 
 # Create C++ Project
 
-Create a new C++ project with CMake build system, modular src layout, and
-Google Test (enabled by default).
+Create a new C++ project with CMake build system, modular src layout,
+Google Test (enabled by default), and CLI11 for command-line parsing
+(always included).
 
 ## When to use
 - User asks to create a new C++ project
@@ -41,9 +42,11 @@ placeholders above can never break anything**:
   `@PROJECT_GIT_COMMIT@`, `@PROJECT_BUILD_TIME@`). Placeholder replacement
   therefore cannot touch them. Do not rename these variables or embed
   placeholders inside `@...@`.
-- Source files reference the namespace via `<namespace-macro>` (replaced with
-  `<PROJECT_NAME_UPPER>` at instantiation, which expands to the config.h
-  macro, e.g. `MYAPP`), and `#include` paths always use the concrete
+- Source files reference the namespace via `<namespace-macro>_NS` (the
+  `<namespace-macro>` placeholder is replaced with `<PROJECT_NAME_UPPER>` at
+  instantiation, and the resulting macro — defined in the generated config.h —
+  expands to the configurable namespace name, e.g. `MYAPP_NS` →
+  `myapp`), and `#include` paths always use the concrete
   `<project-name>` (e.g. `#include "myapp/core/foo.hpp"`).
 - Module CMakeLists come in two ready-to-use variants — no manual
   uncommenting is ever needed:
@@ -66,6 +69,10 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 - Never leak include dirs/definitions globally — attach them to the target.
 - Full rules are in `templates/thirdparty-README.md.tmpl` (generated as
   `cmake/thirdparty/README.md`); follow them when adding new libraries.
+- **CLI11 is a default dependency** for command-line parsing: always generate
+  `cmake/thirdparty/cli11.cmake` (from `templates/thirdparty-cli11.cmake.tmpl`)
+  and `include(cli11)` it from `cmake/thirdparty.cmake`. CLI targets link
+  `CLI11::CLI11` (via the `cli_common` library below).
 
 ## Steps
 
@@ -84,6 +91,7 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 │   ├── thirdparty.cmake            # third-party loading entry point
 │   └── thirdparty/                 # one config file per third-party library
 │       ├── README.md               # how to add a third-party dependency
+│       ├── cli11.cmake             # CLI11 command-line parsing (always)
 │       └── googletest.cmake        (always — GTest is the default test framework)
 ├── src/                            # one self-contained directory per module
 │   ├── core/
@@ -103,8 +111,29 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 │   │   └── src/
 │   │       └── foo.cpp
 │   └── main.cpp
+├── cli/                           # CLI tools
+│   ├── CMakeLists.txt             # add_subdirectory(common) + one per tool
+│   ├── common/                    # shared CLI utilities library (cli_common)
+│   │   ├── CMakeLists.txt         # static lib, links CLI11::CLI11 + <project>::<project>_lib
+│   │   ├── include/
+│   │   │   └── <project-name>/
+│   │   │       └── cli/
+│   │   │           └── util.hpp   # shared CLI helpers
+│   │   └── src/
+│   │       └── util.cpp
+│   └── foo/                       # demo CLI tool
+│       ├── CMakeLists.txt         # executable <project>_cli_foo, links cli_common
+│       └── main.cpp
 └── tests/                          # tests, one subdirectory per module
-    ├── CMakeLists.txt              # enable_testing + add_subdirectory per module
+    ├── CMakeLists.txt              # add_subdirectory(common) first, then per module
+    ├── common/                     # shared test utilities library (test_common)
+    │   ├── CMakeLists.txt          # static lib target test_common, alias <project>::test_common
+    │   ├── include/
+    │   │   └── <project-name>/
+    │   │       └── tests/
+    │   │           └── util.hpp    # shared fixtures/helpers
+    │   └── src/
+    │       └── util.cpp
     ├── core/
     │   ├── CMakeLists.txt          # test target <project>_core_tests
     │   └── foo_test.cpp
@@ -139,18 +168,39 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
   `tests/CMakeLists.txt` adds each module's tests via `add_subdirectory`;
   each `tests/<module-name>/CMakeLists.txt` defines a test target
   `<project-name>_<module-name>_tests` (globbing `*.cpp`, linking
-  `${PROJECT_NAME}_lib` and `GTest::gtest_main`, discovered via
+  `${PROJECT_NAME}::test_common` and `GTest::gtest_main`, discovered via
   `gtest_discover_tests`).
+- `tests/common/` holds a shared test-utilities **static library** target
+  `test_common` (alias `<project-name>::test_common`): common fixtures,
+  helpers, and test data go here. It PUBLICly publishes `include/`, links
+  `${PROJECT_NAME}::${PROJECT_NAME}_lib` and `GTest::gtest` PUBLIC, and must
+  be added via `add_subdirectory(common)` **before** the module test
+  subdirectories in `tests/CMakeLists.txt`. Its headers use the
+  project-prefixed path `#include "<project-name>/tests/util.hpp"`
+  (mirrors the module header convention, avoids bare-name collisions).
+- `cli/common/` holds a shared CLI-utilities **static library** target
+  `cli_common` (alias `<project-name>::cli_common`): common CLI helpers built
+  on CLI11. It PUBLICly publishes `include/` and links `CLI11::CLI11` and
+  `${PROJECT_NAME}::${PROJECT_NAME}_lib` PUBLIC. It is added via
+  `add_subdirectory(cli)` in the top-level `CMakeLists.txt` (after the
+  aggregate `_lib` target is defined). CLI executables link
+  `<project-name>::cli_common` to get CLI11 + all modules. Its headers use
+  the project-prefixed path `#include "<project-name>/cli/util.hpp"`
+  (mirrors the module header convention, avoids bare-name collisions).
+- `cli/foo/` is a demo CLI tool: executable target `<project-name>_cli_foo`
+  linking `${PROJECT_NAME}::cli_common`, parsing args with CLI11 and calling
+  the core/algorithm modules. New CLI tools follow the same pattern (new
+  `cli/<tool>/` dir + `add_subdirectory(<tool>)` in `cli/CMakeLists.txt`).
 - Header path mirrors the module: `#include "<project-name>/<module-name>/<module-name>.hpp"`.
 - Every module header includes the generated config header:
   `#include "<project-name>/config.h"` (the config include dir is published
   by the aggregate `${PROJECT_NAME}_lib` target).
 - Namespace: all modules use the unified namespace defined by
   `PROJECT_NAMESPACE` in `cmake/options.cmake` (default: the project name),
-  e.g. `myapp::core`, `myapp::algorithm`. In **all** source files (headers,
+  e.g. `myapp_NS::core` (via the `MYAPP_NS` macro), `myapp_NS::algorithm`. In **all** source files (headers,
   `.cpp`, tests), reference the namespace via the `<namespace-macro>`
-  placeholder (e.g. `namespace <namespace-macro>::core { ... }`,
-  `<namespace-macro>::core::Greeter`), which is replaced with
+  placeholder (e.g. `namespace <namespace-macro>_NS::core { ... }`,
+  `<namespace-macro>_NS::core::Greeter`), which is replaced with
   `<PROJECT_NAME_UPPER>` at instantiation so the namespace is configurable at
   configure time. Only `#include` paths use the concrete name
   (`<project-name>/<module>/...`).
@@ -173,6 +223,7 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 - `templates/thirdparty.cmake.tmpl` → `cmake/thirdparty.cmake`
 - `templates/thirdparty-README.md.tmpl` → `cmake/thirdparty/README.md`
 - `templates/thirdparty-googletest.cmake.tmpl` → `cmake/thirdparty/googletest.cmake`
+- `templates/thirdparty-cli11.cmake.tmpl` → `cmake/thirdparty/cli11.cmake`
 - `templates/gitignore.tmpl` → `.gitignore`
 - `templates/README.md.tmpl` → `README.md`
 - `templates/module-foo-header.hpp.tmpl` → `src/core/include/<project-name>/core/foo.hpp`
@@ -181,6 +232,12 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 - `templates/module-algorithm-foo-header.hpp.tmpl` → `src/algorithm/include/<project-name>/algorithm/foo.hpp`
 - `templates/module-algorithm-foo-impl.cpp.tmpl` → `src/algorithm/src/foo.cpp`
 - `templates/module-deps-CMakeLists.txt.tmpl` → `src/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`; the core link is already wired in)
+- `templates/cli-CMakeLists.txt.tmpl` → `cli/CMakeLists.txt`
+- `templates/cli-common-CMakeLists.txt.tmpl` → `cli/common/CMakeLists.txt`
+- `templates/cli-common-include/cpp_pj/cli/util.hpp.tmpl` → `cli/common/include/<project-name>/cli/util.hpp`
+- `templates/cli-common-src-util.cpp.tmpl` → `cli/common/src/util.cpp`
+- `templates/cli-foo-CMakeLists.txt.tmpl` → `cli/foo/CMakeLists.txt`
+- `templates/cli-foo-main.cpp.tmpl` → `cli/foo/main.cpp`
 
 Feel free to adapt the sample `Greeter` (core) and `add`/`greet_sum`
 (algorithm, which uses core) to the user's actual use case. Add more modules
@@ -192,6 +249,9 @@ if the user asks.
 - `templates/test-core-foo.cpp.tmpl` → `tests/core/foo_test.cpp`
 - `templates/test-algorithm-foo.cpp.tmpl` → `tests/algorithm/foo_test.cpp`
 - `templates/tests-CMakeLists.txt.tmpl` → `tests/CMakeLists.txt`
+- `templates/test-common-CMakeLists.txt.tmpl` → `tests/common/CMakeLists.txt`
+- `templates/test-common-include/tests-util.hpp.tmpl` → `tests/common/include/<project-name>/tests/util.hpp`
+- `templates/test-common-src-util.cpp.tmpl` → `tests/common/src/util.cpp`
 - `templates/test-module-CMakeLists.txt.tmpl` → `tests/core/CMakeLists.txt` (replace `<module-name>` with `core`, `<MODULE_NAME_UPPER>` with `CORE`)
 - `templates/test-module-CMakeLists.txt.tmpl` → `tests/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`)
 - In `cmake/options.cmake`, set `<PROJECT_NAME_UPPER>_BUILD_TESTS` default to `ON`
