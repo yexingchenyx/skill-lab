@@ -1,0 +1,19 @@
+#pragma once
+
+#include <string>
+
+#include "<project-name>/config.h"
+
+namespace <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::core {
+
+/// Sample class for the `core` module.
+class Greeter {
+public:
+    explicit Greeter(std::string name);
+    std::string greet() const;
+
+private:
+    std::string name_;
+};
+
+}  // namespace <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::core

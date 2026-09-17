@@ -1,0 +1,16 @@
+#pragma once
+
+#include <string>
+
+#include "<project-name>/config.h"
+#include "<PROJECT_NAME_UPPER>_NAMESPACE@/core/foo.hpp"
+
+namespace <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::algorithm {
+
+/// Sample utility for the `algorithm` module.
+/// Depends on the `core` module (e.g. uses core::Greeter).
+std::string greet_sum(const std::string& name, int a, int b);
+
+int add(int a, int b);
+
+}  // namespace <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::algorithm

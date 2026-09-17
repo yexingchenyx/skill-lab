@@ -1,0 +1,86 @@
+# Common build utilities: output dirs, VCS info, build time, config header.
+# Included from the top-level CMakeLists.txt after include(options).
+
+# ---------------------------------------------------------------------------
+# Build output locations. Everything lands under
+# ${CMAKE_BINARY_DIR}/output/<config>/ (e.g. output/Release, output/Debug),
+# laid out like an install prefix (bin/, lib/, include/) so each
+# configuration can be run or packaged independently.
+# ---------------------------------------------------------------------------
+# Normalize the config name: single-config generators use CMAKE_BUILD_TYPE
+# (default Release, set in cmake/options.cmake); multi-config generators use
+# $<CONFIG> at build time.
+if(NOT CMAKE_CONFIGURATION_TYPES)
+  set(<PROJECT_NAME_UPPER>_CONFIG_NAME ${CMAKE_BUILD_TYPE})
+else()
+  set(<PROJECT_NAME_UPPER>_CONFIG_NAME $<CONFIG>)
+endif()
+
+set(<PROJECT_NAME_UPPER>_OUTPUT_DIR ${CMAKE_BINARY_DIR}/output/${<PROJECT_NAME_UPPER>_CONFIG_NAME})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${<PROJECT_NAME_UPPER>_OUTPUT_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${<PROJECT_NAME_UPPER>_OUTPUT_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${<PROJECT_NAME_UPPER>_OUTPUT_DIR}/lib)
+# Multi-config generators: per-config output dirs so Debug/Release stay apart.
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+  string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG_UPPER)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG_UPPER} ${CMAKE_BINARY_DIR}/output/${OUTPUTCONFIG}/bin)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG_UPPER} ${CMAKE_BINARY_DIR}/output/${OUTPUTCONFIG}/lib)
+  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG_UPPER} ${CMAKE_BINARY_DIR}/output/${OUTPUTCONFIG}/lib)
+endforeach()
+
+# ---------------------------------------------------------------------------
+# Git commit hash (short). Sets <PROJECT_NAME_UPPER>_GIT_COMMIT.
+# ---------------------------------------------------------------------------
+find_package(Git QUIET)
+if(Git_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE <PROJECT_NAME_UPPER>_GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+endif()
+if(NOT <PROJECT_NAME_UPPER>_GIT_COMMIT)
+  set(<PROJECT_NAME_UPPER>_GIT_COMMIT "unknown")
+endif()
+
+# ---------------------------------------------------------------------------
+# Build time (UTC). Sets <PROJECT_NAME_UPPER>_BUILD_TIME.
+# ---------------------------------------------------------------------------
+string(TIMESTAMP <PROJECT_NAME_UPPER>_BUILD_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
+
+# ---------------------------------------------------------------------------
+# Generate the build configuration header into the per-config output dir.
+# All targets must include it as: #include "<project-name>/config.h"
+# ---------------------------------------------------------------------------
+# <PROJECT_NAME_UPPER>_DEBUG is 1 for Debug builds, 0 otherwise.
+# Multi-config: set per configuration inside the loop below.
+if(NOT CMAKE_CONFIGURATION_TYPES)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(<PROJECT_NAME_UPPER>_DEBUG 1)
+  else()
+    set(<PROJECT_NAME_UPPER>_DEBUG 0)
+  endif()
+  set(<PROJECT_NAME_UPPER>_CONFIG_DIR ${<PROJECT_NAME_UPPER>_OUTPUT_DIR}/include)
+  configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.h.in
+    ${<PROJECT_NAME_UPPER>_CONFIG_DIR}/<project-name>/config.h
+    @ONLY
+  )
+else()
+  # Multi-config: generate one config.h per configuration.
+  foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+    if(OUTPUTCONFIG STREQUAL "Debug")
+      set(<PROJECT_NAME_UPPER>_DEBUG 1)
+    else()
+      set(<PROJECT_NAME_UPPER>_DEBUG 0)
+    endif()
+    configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.h.in
+      ${CMAKE_BINARY_DIR}/output/${OUTPUTCONFIG}/include/<project-name>/config.h
+      @ONLY
+    )
+  endforeach()
+  set(<PROJECT_NAME_UPPER>_CONFIG_DIR ${CMAKE_BINARY_DIR}/output/$<CONFIG>/include)
+endif()

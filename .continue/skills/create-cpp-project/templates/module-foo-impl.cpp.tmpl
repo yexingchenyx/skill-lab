@@ -1,0 +1,11 @@
+#include "<PROJECT_NAME_UPPER>_NAMESPACE@/core/foo.hpp"
+
+namespace <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::core {
+
+Greeter::Greeter(std::string name) : name_(std::move(name)) {}
+
+std::string Greeter::greet() const {
+    return "Hello, " + name_ + "!";
+}
+
+}  // namespace <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::core

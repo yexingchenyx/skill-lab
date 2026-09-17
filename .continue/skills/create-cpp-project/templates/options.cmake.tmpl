@@ -1,0 +1,21 @@
+# Project build options and global configuration.
+# Included from the top-level CMakeLists.txt.
+
+# ---------------------------------------------------------------------------
+# Build type (Debug / Release / RelWithDebInfo / MinSizeRel).
+# Defaults to Release when not specified on the command line:
+#   cmake -B build -DCMAKE_BUILD_TYPE=Debug
+# ---------------------------------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
+endif()
+
+option(<PROJECT_NAME_UPPER>_BUILD_TESTS "Build unit tests" ON)
+option(<PROJECT_NAME_UPPER>_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
+
+# ---------------------------------------------------------------------------
+# Unified C++ namespace for all modules. Defaults to the project name;
+# override on the command line with -D<PROJECT_NAME_UPPER>_NAMESPACE=...
+# ---------------------------------------------------------------------------
+set(<PROJECT_NAME_UPPER>_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")

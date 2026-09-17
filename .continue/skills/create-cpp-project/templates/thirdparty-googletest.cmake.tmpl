@@ -1,0 +1,15 @@
+include(FetchContent)
+
+# Fetch and make available Google Test as a namespaced target
+# (GTest::gtest_main, GTest::gtest) so consumers can link directly:
+#   target_link_libraries(<target> PRIVATE GTest::gtest_main)
+# Loaded from cmake/thirdparty.cmake when <PROJECT_NAME_UPPER>_BUILD_TESTS is ON.
+
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+# googletest already provides the namespaced targets
+# GTest::gtest_main and GTest::gtest — nothing more to alias.

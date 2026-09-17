@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.14)
+project(<project-name> VERSION 0.1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD <cxx-standard>)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+                             ${CMAKE_CURRENT_SOURCE_DIR}/cmake/thirdparty)
+include(options)
+include(common)
+include(thirdparty)
+
+# src/CMakeLists.txt aggregates all modules (add_subdirectory per module).
+add_subdirectory(src)
+# Aggregate target: links all modules so consumers/tests can depend on one
+# target. New modules should also be linked here.
+add_library(${PROJECT_NAME}_lib INTERFACE)
+target_link_libraries(${PROJECT_NAME}_lib INTERFACE
+  ${PROJECT_NAME}::core
+  ${PROJECT_NAME}::algorithm)
+# Namespaced alias: consumers link <project-name>::<project-name>_lib
+add_library(${PROJECT_NAME}::${PROJECT_NAME}_lib ALIAS ${PROJECT_NAME}_lib)
+# Generated config header (from cmake/common.cmake)
+target_include_directories(${PROJECT_NAME}_lib INTERFACE ${<PROJECT_NAME_UPPER>_CONFIG_DIR})
