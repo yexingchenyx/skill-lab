@@ -28,27 +28,30 @@ All templates in `templates/` use these placeholders — replace every occurrenc
 | `<ProjectName>` | `MyApp`                   |
 | `<PROJECT_NAME_UPPER>` | `MYAPP`            |
 | `<cxx-standard>`| `20`                      |
-| `<PROJECT_NAME_UPPER>_NAMESPACE_MACRO@` | `DEMO_NAMESPACE` (namespace macro from config.h, used in `namespace X::...` declarations) |
+| `<namespace-macro>` | `MYAPP` (expands to the config.h namespace macro, used in `namespace X::...` declarations) |
 
-### Placeholder replacement pitfalls (IMPORTANT)
+### Placeholder replacement safety (by design)
 
-1. **`cmake/config.h.in`**: the `@...@` tokens in it (e.g.
-   `@<PROJECT_NAME_UPPER>_NAMESPACE@`, `@<project-name>_VERSION_MAJOR@`) are
-   **CMake `configure_file` variables** — they must survive template
-   instantiation so CMake can expand them later. When replacing
-   `<PROJECT_NAME_UPPER>` / `<project-name>` placeholders, only substitute the
-   literal placeholder text; **never** let a sed-like replacement mangle the
-   surrounding `@...@` (e.g. `@PJ_NAMESPACE@` must NOT become `@pj`). The
-   correct result for project `pj` is:
-   ```c
-   #define PJ_NAMESPACE @PJ_NAMESPACE@
-   #define PJ_NAMESPACE_NAME "@PJ_NAMESPACE_NAME@"
-   ```
-2. **`module-CMakeLists.txt.tmpl` for `algorithm`**: after instantiation you
-   MUST uncomment `target_link_libraries(${PROJECT_NAME}_algorithm PUBLIC
-   ${PROJECT_NAME}::core)` — algorithm includes core's headers, and without
-   the link the build fails with "pj/core/foo.hpp: No such file or directory".
-   For `core` (no dependencies), remove the commented dependency example.
+The templates are constructed so that a **plain literal replacement of the
+placeholders above can never break anything**:
+
+- Every `@...@` token in `cmake/config.h.in` is a CMake `configure_file`
+  variable with a **fixed name containing no placeholders**
+  (`@PROJECT_VERSION@`, `@PROJECT_NAMESPACE@`, `@PROJECT_DEBUG@`,
+  `@PROJECT_GIT_COMMIT@`, `@PROJECT_BUILD_TIME@`). Placeholder replacement
+  therefore cannot touch them. Do not rename these variables or embed
+  placeholders inside `@...@`.
+- Source files reference the namespace via `<namespace-macro>` (replaced with
+  `<PROJECT_NAME_UPPER>` at instantiation, which expands to the config.h
+  macro, e.g. `MYAPP`), and `#include` paths always use the concrete
+  `<project-name>` (e.g. `#include "myapp/core/foo.hpp"`).
+- Module CMakeLists come in two ready-to-use variants — no manual
+  uncommenting is ever needed:
+  - `templates/module-CMakeLists.txt.tmpl`: module with **no** module
+    dependencies (use for `core`).
+  - `templates/module-deps-CMakeLists.txt.tmpl`: module that **links
+    `${PROJECT_NAME}::core` PUBLIC** (use for `algorithm` and any other
+    module that includes core headers).
 
 ## Third-party library convention
 
@@ -143,17 +146,19 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
   `#include "<project-name>/config.h"` (the config include dir is published
   by the aggregate `${PROJECT_NAME}_lib` target).
 - Namespace: all modules use the unified namespace defined by
-  `<PROJECT_NAME_UPPER>_NAMESPACE` in `cmake/options.cmake` (default: the
-  project name), e.g. `myapp::core`, `myapp::algorithm`. In **all** source
-  files (headers, `.cpp`, tests), reference the namespace via the config.h
-  macro `<PROJECT_NAME_UPPER>_NAMESPACE_MACRO@` (e.g.
-  `namespace <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::core { ... }`,
-  `<PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::core::Greeter`) so the namespace
-  is configurable at configure time. Only `#include` paths use the concrete
-  name (`<project-name>/<module>/...`).
+  `PROJECT_NAMESPACE` in `cmake/options.cmake` (default: the project name),
+  e.g. `myapp::core`, `myapp::algorithm`. In **all** source files (headers,
+  `.cpp`, tests), reference the namespace via the `<namespace-macro>`
+  placeholder (e.g. `namespace <namespace-macro>::core { ... }`,
+  `<namespace-macro>::core::Greeter`), which is replaced with
+  `<PROJECT_NAME_UPPER>` at instantiation so the namespace is configurable at
+  configure time. Only `#include` paths use the concrete name
+  (`<project-name>/<module>/...`).
 - New module = new `src/<mod>/` dir (with its own `CMakeLists.txt` from
-  `templates/module-CMakeLists.txt.tmpl`, `include/<project-name>/<mod>/`
-  inside) + `tests/<mod>/` dir; then add `add_subdirectory(<mod>)` in
+  `templates/module-CMakeLists.txt.tmpl` if it has no module dependencies, or
+  `templates/module-deps-CMakeLists.txt.tmpl` if it depends on core,
+  `include/<project-name>/<mod>/` inside) + `tests/<mod>/` dir; then add
+  `add_subdirectory(<mod>)` in
   `src/CMakeLists.txt` and link it into `${PROJECT_NAME}_lib` in the
   top-level `CMakeLists.txt` (two lines).
 
@@ -172,10 +177,10 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 - `templates/README.md.tmpl` → `README.md`
 - `templates/module-foo-header.hpp.tmpl` → `src/core/include/<project-name>/core/foo.hpp`
 - `templates/module-foo-impl.cpp.tmpl` → `src/core/src/foo.cpp`
-- `templates/module-CMakeLists.txt.tmpl` → `src/core/CMakeLists.txt` (replace `<module-name>` with `core`, `<MODULE_NAME_UPPER>` with `CORE`; remove the commented dependency example)
+- `templates/module-CMakeLists.txt.tmpl` → `src/core/CMakeLists.txt` (replace `<module-name>` with `core`, `<MODULE_NAME_UPPER>` with `CORE`)
 - `templates/module-algorithm-foo-header.hpp.tmpl` → `src/algorithm/include/<project-name>/algorithm/foo.hpp`
 - `templates/module-algorithm-foo-impl.cpp.tmpl` → `src/algorithm/src/foo.cpp`
-- `templates/module-CMakeLists.txt.tmpl` → `src/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`; uncomment the dependency line so it links `${PROJECT_NAME}::core` PUBLIC)
+- `templates/module-deps-CMakeLists.txt.tmpl` → `src/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`; the core link is already wired in)
 
 Feel free to adapt the sample `Greeter` (core) and `add`/`greet_sum`
 (algorithm, which uses core) to the user's actual use case. Add more modules
@@ -192,15 +197,8 @@ if the user asks.
 - In `cmake/options.cmake`, set `<PROJECT_NAME_UPPER>_BUILD_TESTS` default to `ON`
   (the googletest module is loaded from `cmake/thirdparty.cmake` under this option)
 
-4. Initialize git repo and make an initial commit (if user agrees):
-
-```bash
-git init && git add . && git commit -m "Initial commit
-
-Generated with [Continue](https://continue.dev)
-
-Co-Authored-By: Continue <noreply@continue.dev>"
-```
+4. Do NOT initialize a git repository — the skill only generates project
+   files. Git initialization/commits are left to the user.
 
 5. Verify the project builds and tests pass (via the presets):
 

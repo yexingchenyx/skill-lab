@@ -1,9 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "<PROJECT_NAME_UPPER>_NAMESPACE@/core/foo.hpp"
+#include "<project-name>/core/foo.hpp"
 
 // Tests for the `core` module.
 TEST(Core, Greeter) {
-    <PROJECT_NAME_UPPER>_NAMESPACE_MACRO@::core::Greeter greeter("world");
+    <namespace-macro>::core::Greeter greeter("world");
     EXPECT_EQ(greeter.greet(), "Hello, world!");
 }

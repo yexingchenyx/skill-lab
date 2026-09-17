@@ -2,20 +2,21 @@
 // Do not edit directly — edit cmake/config.h.in instead.
 #pragma once
 
-#define <PROJECT_NAME_UPPER>_VERSION_MAJOR @<project-name>_VERSION_MAJOR@
-#define <PROJECT_NAME_UPPER>_VERSION_MINOR @<project-name>_VERSION_MINOR@
-#define <PROJECT_NAME_UPPER>_VERSION_PATCH @<project-name>_VERSION_PATCH@
-#define <PROJECT_NAME_UPPER>_VERSION "@<project-name>_VERSION@"
+// NOTE: every token inside @...@ below is a CMake configure_file variable
+// with a FIXED name (PROJECT_*) that contains no template placeholders.
+// Placeholder replacement (<project-name>, <PROJECT_NAME_UPPER>, ...)
+// can therefore never touch these @...@ tokens.
+#define <PROJECT_NAME_UPPER>_VERSION_MAJOR @PROJECT_VERSION_MAJOR@
+#define <PROJECT_NAME_UPPER>_VERSION_MINOR @PROJECT_VERSION_MINOR@
+#define <PROJECT_NAME_UPPER>_VERSION_PATCH @PROJECT_VERSION_PATCH@
+#define <PROJECT_NAME_UPPER>_VERSION "@PROJECT_VERSION@"
 
-// Unified C++ namespace for all modules (set in cmake/options.cmake).
+// Unified C++ namespace for all modules (set in cmake/options.cmake,
+// forwarded to PROJECT_NAMESPACE in cmake/common.cmake).
 // Use as namespace name: namespace <PROJECT_NAME_UPPER>_NAMESPACE { ... }
 // or in string contexts: <PROJECT_NAME_UPPER>_NAMESPACE_NAME
-// NOTE: the @...@ tokens below are CMake configure_file variables
-// (<PROJECT_NAME_UPPER>_NAMESPACE / _NAMESPACE_NAME are defined in
-// cmake/options.cmake). When replacing placeholders, only substitute the
-// literal "<PROJECT_NAME_UPPER>" text — never touch the surrounding @...@.
-#define <PROJECT_NAME_UPPER>_NAMESPACE @<PROJECT_NAME_UPPER>_NAMESPACE@
-#define <PROJECT_NAME_UPPER>_NAMESPACE_NAME "@<PROJECT_NAME_UPPER>_NAMESPACE@"
+#define <PROJECT_NAME_UPPER>_NAMESPACE @PROJECT_NAMESPACE@
+#define <PROJECT_NAME_UPPER>_NAMESPACE_NAME "@PROJECT_NAMESPACE@"
 
 // Build options
 #cmakedefine01 <PROJECT_NAME_UPPER>_BUILD_TESTS
@@ -23,8 +24,8 @@
 
 // Build type: <PROJECT_NAME_UPPER>_DEBUG is 1 in Debug builds, 0 otherwise.
 #define <PROJECT_NAME_UPPER>_BUILD_TYPE "@CMAKE_BUILD_TYPE@"
-#define <PROJECT_NAME_UPPER>_DEBUG @<PROJECT_NAME_UPPER>_DEBUG@
+#define <PROJECT_NAME_UPPER>_DEBUG @PROJECT_DEBUG@
 
 // Build metadata (set in cmake/common.cmake)
-#define <PROJECT_NAME_UPPER>_GIT_COMMIT "@<PROJECT_NAME_UPPER>_GIT_COMMIT@"
-#define <PROJECT_NAME_UPPER>_BUILD_TIME "@<PROJECT_NAME_UPPER>_BUILD_TIME@"
+#define <PROJECT_NAME_UPPER>_GIT_COMMIT "@PROJECT_GIT_COMMIT@"
+#define <PROJECT_NAME_UPPER>_BUILD_TIME "@PROJECT_BUILD_TIME@"

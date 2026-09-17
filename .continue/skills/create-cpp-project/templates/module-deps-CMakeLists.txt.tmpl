@@ -1,8 +1,10 @@
-# <module-name> module: self-contained library target (no module dependencies).
+# <module-name> module: self-contained library target that depends on core.
 # Sources in src/, headers in include/<project-name>/<module-name>/.
 file(GLOB <MODULE_NAME_UPPER>_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 add_library(${PROJECT_NAME}_<module-name> ${<MODULE_NAME_UPPER>_SOURCES})
 target_include_directories(${PROJECT_NAME}_<module-name>
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${<PROJECT_NAME_UPPER>_CONFIG_DIR})
+# This module includes headers from core, so it MUST link core (already wired).
+target_link_libraries(${PROJECT_NAME}_<module-name> PUBLIC ${PROJECT_NAME}::core)
 # Namespaced alias: consumers link <project-name>::<module-name>
 add_library(${PROJECT_NAME}::<module-name> ALIAS ${PROJECT_NAME}_<module-name>)

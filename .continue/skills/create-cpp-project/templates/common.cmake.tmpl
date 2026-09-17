@@ -29,38 +29,40 @@ foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
 endforeach()
 
 # ---------------------------------------------------------------------------
-# Git commit hash (short). Sets <PROJECT_NAME_UPPER>_GIT_COMMIT.
+# Git commit hash (short). Sets PROJECT_GIT_COMMIT.
 # ---------------------------------------------------------------------------
 find_package(Git QUIET)
 if(Git_FOUND)
   execute_process(
     COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_VARIABLE <PROJECT_NAME_UPPER>_GIT_COMMIT
+    OUTPUT_VARIABLE PROJECT_GIT_COMMIT
     OUTPUT_STRIP_TRAILING_WHITESPACE
     ERROR_QUIET
   )
 endif()
-if(NOT <PROJECT_NAME_UPPER>_GIT_COMMIT)
-  set(<PROJECT_NAME_UPPER>_GIT_COMMIT "unknown")
+if(NOT PROJECT_GIT_COMMIT)
+  set(PROJECT_GIT_COMMIT "unknown")
 endif()
 
 # ---------------------------------------------------------------------------
-# Build time (UTC). Sets <PROJECT_NAME_UPPER>_BUILD_TIME.
+# Build time (UTC). Sets PROJECT_BUILD_TIME.
 # ---------------------------------------------------------------------------
-string(TIMESTAMP <PROJECT_NAME_UPPER>_BUILD_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
+string(TIMESTAMP PROJECT_BUILD_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
 
 # ---------------------------------------------------------------------------
 # Generate the build configuration header into the per-config output dir.
 # All targets must include it as: #include "<project-name>/config.h"
 # ---------------------------------------------------------------------------
-# <PROJECT_NAME_UPPER>_DEBUG is 1 for Debug builds, 0 otherwise.
+# PROJECT_DEBUG is 1 for Debug builds, 0 otherwise.
 # Multi-config: set per configuration inside the loop below.
+# NOTE: all variables consumed by configure_file (PROJECT_*) use fixed names
+# without template placeholders, so config.h.in's @...@ tokens are safe.
 if(NOT CMAKE_CONFIGURATION_TYPES)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(<PROJECT_NAME_UPPER>_DEBUG 1)
+    set(PROJECT_DEBUG 1)
   else()
-    set(<PROJECT_NAME_UPPER>_DEBUG 0)
+    set(PROJECT_DEBUG 0)
   endif()
   set(<PROJECT_NAME_UPPER>_CONFIG_DIR ${<PROJECT_NAME_UPPER>_OUTPUT_DIR}/include)
   configure_file(
@@ -72,9 +74,9 @@ else()
   # Multi-config: generate one config.h per configuration.
   foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
     if(OUTPUTCONFIG STREQUAL "Debug")
-      set(<PROJECT_NAME_UPPER>_DEBUG 1)
+      set(PROJECT_DEBUG 1)
     else()
-      set(<PROJECT_NAME_UPPER>_DEBUG 0)
+      set(PROJECT_DEBUG 0)
     endif()
     configure_file(
       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.h.in

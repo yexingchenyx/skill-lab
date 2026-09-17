@@ -16,6 +16,8 @@ option(<PROJECT_NAME_UPPER>_WARNINGS_AS_ERRORS "Treat compiler warnings as error
 
 # ---------------------------------------------------------------------------
 # Unified C++ namespace for all modules. Defaults to the project name;
-# override on the command line with -D<PROJECT_NAME_UPPER>_NAMESPACE=...
+# override on the command line with -DPROJECT_NAMESPACE=...
+# (PROJECT_NAMESPACE is the fixed configure_file variable name consumed by
+# cmake/config.h.in — it must NOT contain template placeholders.)
 # ---------------------------------------------------------------------------
-set(<PROJECT_NAME_UPPER>_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
+set(PROJECT_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
