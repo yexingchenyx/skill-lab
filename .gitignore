@@ -1,24 +1,15 @@
-# Build artifacts
-build/
-build-*/
-output/
-bin/
-lib/
-*.o
-*.a
-*.so
+# Whitelist mode: ignore everything by default
+*
 
-# CMake
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-CTestTestfile.cmake
-Testing/
+# Allow directories to be traversed
+!*/
 
-# IDE
-.idea/
-.vscode/
-*.swp
+# Whitelist: git related files
+!.gitignore
+!.gitattributes
+!LICENSE
+!README.md
 
-# OS
-.DS_Store
+# Whitelist: .continue folder
+!.continue/
+!.continue/**
