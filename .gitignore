@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+build-*/
+output/
+bin/
+lib/
+*.o
+*.a
+*.so
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
