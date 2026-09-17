@@ -159,7 +159,7 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 
 2. Generate files from templates (copy and replace placeholders):
 
-- `templates/CMakeLists.txt.tmpl` → `CMakeLists.txt` (replace `<project-name>`, `<cxx-standard>`, and `<PROJECT_NAME_UPPER>` placeholders — the if-block uses `if(<PROJECT_NAME_UPPER>_BUILD_TESTS)`)
+- `templates/CMakeLists.txt.tmpl` → `CMakeLists.txt` (replace `<project-name>`, `<cxx-standard>`, and `<PROJECT_NAME_UPPER>` placeholders — includes the trailing `if(<PROJECT_NAME_UPPER>_BUILD_TESTS)` block with `enable_testing()` and `add_subdirectory(tests)`)
 - `templates/CMakePresets.json.tmpl` → `CMakePresets.json`
 - `templates/src-CMakeLists.txt.tmpl` → `src/CMakeLists.txt`
 - `templates/options.cmake.tmpl` → `cmake/options.cmake` (replace `<PROJECT_NAME_UPPER>` with the uppercased project name)
@@ -189,7 +189,6 @@ if the user asks.
 - `templates/tests-CMakeLists.txt.tmpl` → `tests/CMakeLists.txt`
 - `templates/test-module-CMakeLists.txt.tmpl` → `tests/core/CMakeLists.txt` (replace `<module-name>` with `core`, `<MODULE_NAME_UPPER>` with `CORE`)
 - `templates/test-module-CMakeLists.txt.tmpl` → `tests/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`)
-- Append the contents of `templates/CMakeLists-tests.inc.cmake` to `CMakeLists.txt`
 - In `cmake/options.cmake`, set `<PROJECT_NAME_UPPER>_BUILD_TESTS` default to `ON`
   (the googletest module is loaded from `cmake/thirdparty.cmake` under this option)
 
