@@ -13,4 +13,3 @@
 # Whitelist: .continue folder
 !.continue/
 !.continue/**
-pj/
