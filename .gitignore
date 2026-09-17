@@ -1,15 +1,10 @@
-# Whitelist mode: ignore everything by default
-*
+# 忽略所有以 . 开头的文件/目录（.gitignore 自身除外）
+.*
 
-# Allow directories to be traversed
-!*/
-
-# Whitelist: git related files
+# 白名单：git 相关文件
 !.gitignore
 !.gitattributes
-!LICENSE
-!README.md
 
-# Whitelist: .continue folder
+# 白名单：.continue 目录
 !.continue/
 !.continue/**
