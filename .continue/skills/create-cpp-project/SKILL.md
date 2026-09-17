@@ -30,6 +30,26 @@ All templates in `templates/` use these placeholders — replace every occurrenc
 | `<cxx-standard>`| `20`                      |
 | `<PROJECT_NAME_UPPER>_NAMESPACE_MACRO@` | `DEMO_NAMESPACE` (namespace macro from config.h, used in `namespace X::...` declarations) |
 
+### Placeholder replacement pitfalls (IMPORTANT)
+
+1. **`cmake/config.h.in`**: the `@...@` tokens in it (e.g.
+   `@<PROJECT_NAME_UPPER>_NAMESPACE@`, `@<project-name>_VERSION_MAJOR@`) are
+   **CMake `configure_file` variables** — they must survive template
+   instantiation so CMake can expand them later. When replacing
+   `<PROJECT_NAME_UPPER>` / `<project-name>` placeholders, only substitute the
+   literal placeholder text; **never** let a sed-like replacement mangle the
+   surrounding `@...@` (e.g. `@PJ_NAMESPACE@` must NOT become `@pj`). The
+   correct result for project `pj` is:
+   ```c
+   #define PJ_NAMESPACE @PJ_NAMESPACE@
+   #define PJ_NAMESPACE_NAME "@PJ_NAMESPACE_NAME@"
+   ```
+2. **`module-CMakeLists.txt.tmpl` for `algorithm`**: after instantiation you
+   MUST uncomment `target_link_libraries(${PROJECT_NAME}_algorithm PUBLIC
+   ${PROJECT_NAME}::core)` — algorithm includes core's headers, and without
+   the link the build fails with "pj/core/foo.hpp: No such file or directory".
+   For `core` (no dependencies), remove the commented dependency example.
+
 ## Third-party library convention
 
 Every third-party dependency in `cmake/thirdparty/<lib>.cmake` **must** expose

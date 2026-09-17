@@ -6,6 +6,8 @@ target_include_directories(${PROJECT_NAME}_<module-name>
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${<PROJECT_NAME_UPPER>_CONFIG_DIR})
 # Link module dependencies here, e.g.:
 # target_link_libraries(${PROJECT_NAME}_<module-name> PUBLIC ${PROJECT_NAME}::core)
-# NOTE: uncomment this line for modules that depend on others (e.g. algorithm -> core).
+# NOTE: for modules that depend on others (e.g. algorithm -> core), UNCOMMENT
+# the line above as part of template instantiation — a module that includes
+# headers from another module MUST link it or the build will fail.
 # Namespaced alias: consumers link <project-name>::<module-name>
 add_library(${PROJECT_NAME}::<module-name> ALIAS ${PROJECT_NAME}_<module-name>)
