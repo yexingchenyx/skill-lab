@@ -1,5 +1,5 @@
 ---
-name: create-cpp-project
+name: cpp-create-project
 description: Create a new C++ project with CMake build system, modular src layout, Google Test (default), and CLI11
 ---
 

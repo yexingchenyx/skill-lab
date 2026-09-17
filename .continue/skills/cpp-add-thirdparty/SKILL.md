@@ -1,16 +1,16 @@
 ---
-name: add-thirdparty-lib
-description: Add a third-party library to a C++ project created by create-cpp-project (namespaced target convention, find_package first with FetchContent fallback)
+name: cpp-add-thirdparty
+description: Add a third-party library to a C++ project created by cpp-create-project (namespaced target convention, find_package first with FetchContent fallback)
 ---
 
 # Add Third-Party Library
 
 Add a third-party dependency to an existing C++ project that was scaffolded
-by the `create-cpp-project` skill (CMake, modular `src/<module>/` layout).
+by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
 
 ## When to use
 - User asks to add a third-party library (e.g. fmt, re2, spdlog, abseil) to
-  a project created by `create-cpp-project`
+  a project created by `cpp-create-project`
 - User asks to wire a dependency into one or more modules
 
 ## Inputs to ask user (if not specified)
