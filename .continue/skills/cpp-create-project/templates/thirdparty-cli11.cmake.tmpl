@@ -1,6 +1,11 @@
+# CLI11 command-line parsing (always included).
+# Strategy: prefer a locally installed CLI11 (find_package);
+# fall back to FetchContent only if not found.
+
 find_package(CLI11 QUIET)
 
 if(NOT CLI11_FOUND)
+  message(STATUS "CLI11 not found locally — fetching via FetchContent")
   include(FetchContent)
   FetchContent_Declare(
     cli11
@@ -8,6 +13,23 @@ if(NOT CLI11_FOUND)
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
   )
   FetchContent_MakeAvailable(cli11)
+endif()
+
+# Final summary: version and location of the CLI11 actually used.
+if(TARGET CLI11::CLI11)
+  get_target_property(_cli11_inc CLI11::CLI11 INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(_cli11_type CLI11::CLI11 TYPE)
+  if(CLI11_VERSION)
+    set(_cli11_ver "${CLI11_VERSION}")
+  else()
+    set(_cli11_ver "2.4.2 (FetchContent)")
+  endif()
+  if(_cli11_type STREQUAL "STATIC_LIBRARY" OR _cli11_type STREQUAL "SHARED_LIBRARY")
+    set(_cli11_loc "built from source (FetchContent)")
+  else()
+    get_target_property(_cli11_loc CLI11::CLI11 LOCATION)
+  endif()
+  message(STATUS "CLI11 version: ${_cli11_ver} | include: ${_cli11_inc} | target: ${_cli11_loc}")
 endif()
 
 # CLI11 provides the namespaced target CLI11::CLI11 — nothing more to alias.

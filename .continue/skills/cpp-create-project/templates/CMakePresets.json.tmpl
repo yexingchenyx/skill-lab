@@ -11,8 +11,11 @@
       "hidden": true,
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-      }
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CPP_PJ_USE_VCPKG": "ON",
+        "CPP_PJ_VCPKG_ROOT": "$env{HOME}/vcpkg"
+      },
+      "toolchainFile": "$env{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
       "name": "release",
@@ -42,12 +45,16 @@
     {
       "name": "release",
       "configurePreset": "release",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     },
     {
       "name": "debug",
       "configurePreset": "debug",
-      "output": { "outputOnFailure": true }
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }

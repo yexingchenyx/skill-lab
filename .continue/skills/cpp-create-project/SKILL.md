@@ -15,9 +15,8 @@ Google Test (enabled by default), and CLI11 for command-line parsing
 
 ## Inputs to ask user (if not specified)
 - Project name (required)
-- C++ standard (default: C++17)
+- C++ standard (default: C++20)
 - Include tests? (default: **yes, Google Test**)
-- Build system (default: CMake; alternative: plain Makefile)
 
 ## Placeholders
 
@@ -26,6 +25,7 @@ All templates in `templates/` use these placeholders — replace every occurrenc
 | Placeholder     | Example (project `myapp`) |
 |-----------------|---------------------------|
 | `<project-name>`| `myapp`                   |
+| `<project-name-dashed>` | `my-app` (underscores → dashes; used in `vcpkg.json` name) |
 | `<ProjectName>` | `MyApp`                   |
 | `<PROJECT_NAME_UPPER>` | `MYAPP`            |
 | `<cxx-standard>`| `20`                      |
@@ -42,12 +42,10 @@ placeholders above can never break anything**:
   `@PROJECT_GIT_COMMIT@`, `@PROJECT_BUILD_TIME@`). Placeholder replacement
   therefore cannot touch them. Do not rename these variables or embed
   placeholders inside `@...@`.
-- Source files reference the namespace via `<namespace-macro>_NS` (the
-  `<namespace-macro>` placeholder is replaced with `<PROJECT_NAME_UPPER>` at
-  instantiation, and the resulting macro — defined in the generated config.h —
-  expands to the configurable namespace name, e.g. `MYAPP_NS` →
-  `myapp`), and `#include` paths always use the concrete
-  `<project-name>` (e.g. `#include "myapp/core/foo.hpp"`).
+- Source files reference the namespace via `<namespace-macro>_NS` (replaced
+  with `<PROJECT_NAME_UPPER>` at instantiation; the macro — defined in the
+  generated config.h — expands to the configurable namespace name), and
+  `#include` paths always use the concrete `<project-name>`.
 - Module CMakeLists come in two ready-to-use variants — no manual
   uncommenting is ever needed:
   - `templates/module-CMakeLists.txt.tmpl`: module with **no** module
@@ -56,23 +54,38 @@ placeholders above can never break anything**:
     `${PROJECT_NAME}::core` PUBLIC** (use for `algorithm` and any other
     module that includes core headers).
 
-## Third-party library convention
+## Built-in conventions (already in the templates — do not re-implement)
 
-Every third-party dependency in `cmake/thirdparty/<lib>.cmake` **must** expose
-a namespaced interface-style target (e.g. `re2::re2`, `fmt::fmt`) so consumers
-can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
-
-- Prefer `find_package`; fall back to `FetchContent`.
-- If the library doesn't provide a namespaced target, create one via
-  `add_library(<lib>::<lib> ALIAS ...)` or an `INTERFACE IMPORTED` target
-  carrying its include dirs and libraries.
-- Never leak include dirs/definitions globally — attach them to the target.
-- Full rules are in `templates/thirdparty-README.md.tmpl` (generated as
-  `cmake/thirdparty/README.md`); follow them when adding new libraries.
-- **CLI11 is a default dependency** for command-line parsing: always generate
-  `cmake/thirdparty/cli11.cmake` (from `templates/thirdparty-cli11.cmake.tmpl`)
-  and `include(cli11)` it from `cmake/thirdparty.cmake`. CLI targets link
-  `CLI11::CLI11` (via the `cli_common` library below).
+- **vcpkg (default ON)**: the `CMakePresets.json` "base" preset wires the
+  toolchain via `"toolchainFile": "$env{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake"`
+  plus `CPP_PJ_USE_VCPKG=ON` and `CPP_PJ_VCPKG_ROOT`. The toolchain MUST be
+  wired via the preset's `toolchainFile` — setting `CMAKE_TOOLCHAIN_FILE`
+  after `project()` (e.g. in `cmake/options.cmake`) is silently ignored;
+  the `options.cmake` vcpkg block is only a fallback/validation layer.
+- **`vcpkg.json` manifest**: lists default deps (`cli11`, `gtest >= 1.14.0`);
+  vcpkg installs them into `build/vcpkg_installed/<triplet>/` at configure
+  time. Keep in sync when adding libraries via `cpp-add-thirdparty`.
+- **`vcpkg-configuration.json`**: pins the version baseline (lockfile for
+  reproducible dependency versions). Obtain the baseline with
+  `git -C <vcpkg-root> rev-parse HEAD` at generation time (fall back to the
+  latest known commit if no local vcpkg exists).
+- **Third-party local-first**: each `cmake/thirdparty/<lib>.cmake` tries
+  `find_package(<lib> QUIET)` first, falls back to `FetchContent` only when
+  not found, then prints a final STATUS summary with the version and
+  location actually used (FetchContent-built libraries report "built from
+  source (FetchContent)" since `LOCATION` is unavailable). Every dependency
+  must expose a namespaced target (`<lib>::<lib>`); never leak include
+  dirs/definitions globally. Full rules: `templates/thirdparty-README.md.tmpl`.
+- **Modules are SHARED libraries** by default (`-DBUILD_SHARED_LIBS=OFF`
+  switches to static).
+- **Unified export macro**: all modules share a single
+  `<PROJECT_NAME_UPPER>_API` macro defined in the generated `config.h`
+  (dllexport/dllimport on Windows, visibility on GCC/Clang; expands to
+  nothing for static builds via `<PROJECT_NAME_UPPER>_STATIC_DEFINE`).
+  Each module defines `<PROJECT_NAME_UPPER>_EXPORTS` (PRIVATE) while
+  building itself. Public headers just include `config.h` and mark public
+  classes/functions with `<PROJECT_NAME_UPPER>_API` — no per-module export
+  headers, and new modules need no config.h change.
 
 ## Steps
 
@@ -81,64 +94,49 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
 ```
 <project-name>/
 ├── CMakeLists.txt
-├── CMakePresets.json               # configure/build/test presets (release, debug)
+├── CMakePresets.json               # presets (release, debug); base wires the vcpkg toolchain
+├── vcpkg.json                      # vcpkg manifest (default deps: cli11, gtest)
+├── vcpkg-configuration.json        # pins the baseline commit (dependency lockfile)
 ├── README.md
 ├── .gitignore
 ├── cmake/                          # CMake modules
-│   ├── options.cmake               # build options / configuration
+│   ├── options.cmake               # build options + vcpkg fallback/validation
 │   ├── common.cmake                # output dirs, git commit, build time, config.h generation
-│   ├── config.h.in                 # template for the generated config header
+│   ├── config.h.in                 # template for the generated config header (incl. <PRJ>_API)
 │   ├── thirdparty.cmake            # third-party loading entry point
 │   └── thirdparty/                 # one config file per third-party library
 │       ├── README.md               # how to add a third-party dependency
 │       ├── cli11.cmake             # CLI11 command-line parsing (always)
 │       └── googletest.cmake        (always — GTest is the default test framework)
 ├── src/                            # one self-contained directory per module
-│   ├── core/
-│   │   ├── CMakeLists.txt          # module build script (target <project>_core)
-│   │   ├── include/
-│   │   │   └── <project-name>/
-│   │   │       └── core/
-│   │   │           └── foo.hpp
-│   │   └── src/
-│   │       └── foo.cpp
-│   ├── algorithm/
-│   │   ├── CMakeLists.txt          # module build script (target <project>_algorithm)
-│   │   ├── include/
-│   │   │   └── <project-name>/
-│   │   │       └── algorithm/
-│   │   │           └── foo.hpp
-│   │   └── src/
-│   │       └── foo.cpp
-│   └── main.cpp
-├── cli/                           # CLI tools
-│   ├── CMakeLists.txt             # add_subdirectory(common) + one per tool
-│   ├── common/                    # shared CLI utilities library (cli_common)
-│   │   ├── CMakeLists.txt         # static lib, links CLI11::CLI11 + <project>::<project>_lib
-│   │   ├── include/
-│   │   │   └── <project-name>/
-│   │   │       └── cli/
-│   │   │           └── util.hpp   # shared CLI helpers
-│   │   └── src/
-│   │       └── util.cpp
-│   └── foo/                       # demo CLI tool
-│       ├── CMakeLists.txt         # executable <project>_cli_foo, links cli_common
+│   ├── core/                       # SHARED lib, target <project>_core
+│   │   ├── CMakeLists.txt
+│   │   ├── include/<project-name>/core/foo.hpp
+│   │   └── src/foo.cpp
+│   └── algorithm/                  # SHARED lib, links core, target <project>_algorithm
+│       ├── CMakeLists.txt
+│       ├── include/<project-name>/algorithm/foo.hpp
+│       └── src/foo.cpp
+├── cli/                            # CLI tools
+│   ├── CMakeLists.txt              # add_subdirectory(common) + one per tool
+│   ├── common/                     # static lib cli_common (CLI11 + aggregate lib)
+│   │   ├── CMakeLists.txt
+│   │   ├── include/<project-name>/cli/util.hpp
+│   │   └── src/util.cpp
+│   └── foo/                        # demo CLI tool <project>_cli_foo
+│       ├── CMakeLists.txt
 │       └── main.cpp
 └── tests/                          # tests, one subdirectory per module
     ├── CMakeLists.txt              # add_subdirectory(common) first, then per module
-    ├── common/                     # shared test utilities library (test_common)
-    │   ├── CMakeLists.txt          # static lib target test_common, alias <project>::test_common
-    │   ├── include/
-    │   │   └── <project-name>/
-    │   │       └── tests/
-    │   │           └── util.hpp    # shared fixtures/helpers
-    │   └── src/
-    │       └── util.cpp
-    ├── core/
-    │   ├── CMakeLists.txt          # test target <project>_core_tests
+    ├── common/                     # static lib test_common (fixtures/helpers)
+    │   ├── CMakeLists.txt
+    │   ├── include/<project-name>/tests/util.hpp
+    │   └── src/util.cpp
+    ├── core/                       # test target <project>_core_tests
+    │   ├── CMakeLists.txt
     │   └── foo_test.cpp
-    └── algorithm/
-        ├── CMakeLists.txt          # test target <project>_algorithm_tests
+    └── algorithm/                  # test target <project>_algorithm_tests
+        ├── CMakeLists.txt
         └── foo_test.cpp
 ```
 
@@ -162,64 +160,54 @@ can link directly with `target_link_libraries(<target> PRIVATE re2::re2)`.
   namespaced aliases, plus the generated config header include dir; the app
   and tests link against `${PROJECT_NAME}_lib`.
 - Each module's tests live in `tests/<module-name>/` (one test file per
-  module, e.g. `tests/core/foo_test.cpp`). The top-level `CMakeLists.txt`
-  calls `enable_testing()` (inside the BUILD_TESTS if-block, so the build
-  root gets a CTestTestfile.cmake and `ctest --test-dir build` works);
-  `tests/CMakeLists.txt` adds each module's tests via `add_subdirectory`;
-  each `tests/<module-name>/CMakeLists.txt` defines a test target
-  `<project-name>_<module-name>_tests` (globbing `*.cpp`, linking
-  `${PROJECT_NAME}::test_common` and `GTest::gtest_main`, discovered via
-  `gtest_discover_tests`).
+  module). The top-level `CMakeLists.txt` calls `enable_testing()` (inside
+  the BUILD_TESTS if-block); `tests/CMakeLists.txt` adds each module's tests
+  via `add_subdirectory`; each `tests/<module-name>/CMakeLists.txt` defines
+  a test target `<project-name>_<module-name>_tests` (globbing `*.cpp`,
+  linking `${PROJECT_NAME}::test_common` and `GTest::gtest_main`, discovered
+  via `gtest_discover_tests`).
 - `tests/common/` holds a shared test-utilities **static library** target
-  `test_common` (alias `<project-name>::test_common`): common fixtures,
-  helpers, and test data go here. It PUBLICly publishes `include/`, links
-  `${PROJECT_NAME}::${PROJECT_NAME}_lib` and `GTest::gtest` PUBLIC, and must
-  be added via `add_subdirectory(common)` **before** the module test
-  subdirectories in `tests/CMakeLists.txt`. Its headers use the
-  project-prefixed path `#include "<project-name>/tests/util.hpp"`
-  (mirrors the module header convention, avoids bare-name collisions).
+  `test_common` (alias `<project-name>::test_common`). It PUBLICly publishes
+  `include/`, links `${PROJECT_NAME}::${PROJECT_NAME}_lib` and
+  `GTest::gtest` PUBLIC, and must be added via `add_subdirectory(common)`
+  **before** the module test subdirectories in `tests/CMakeLists.txt`.
 - `cli/common/` holds a shared CLI-utilities **static library** target
-  `cli_common` (alias `<project-name>::cli_common`): common CLI helpers built
-  on CLI11. It PUBLICly publishes `include/` and links `CLI11::CLI11` and
-  `${PROJECT_NAME}::${PROJECT_NAME}_lib` PUBLIC. It is added via
-  `add_subdirectory(cli)` in the top-level `CMakeLists.txt` (after the
-  aggregate `_lib` target is defined). CLI executables link
-  `<project-name>::cli_common` to get CLI11 + all modules. Its headers use
-  the project-prefixed path `#include "<project-name>/cli/util.hpp"`
-  (mirrors the module header convention, avoids bare-name collisions).
+  `cli_common` (alias `<project-name>::cli_common`): links `CLI11::CLI11`
+  and `${PROJECT_NAME}::${PROJECT_NAME}_lib` PUBLIC, added via
+  `add_subdirectory(cli)` after the aggregate `_lib` target is defined.
+  CLI executables link `<project-name>::cli_common`.
 - `cli/foo/` is a demo CLI tool: executable target `<project-name>_cli_foo`
-  linking `${PROJECT_NAME}::cli_common`, parsing args with CLI11 and calling
-  the core/algorithm modules. New CLI tools follow the same pattern (new
-  `cli/<tool>/` dir + `add_subdirectory(<tool>)` in `cli/CMakeLists.txt`).
+  linking `${PROJECT_NAME}::cli_common`. New CLI tools follow the same
+  pattern (new `cli/<tool>/` dir + `add_subdirectory(<tool>)` in
+  `cli/CMakeLists.txt`).
 - Header path mirrors the module: `#include "<project-name>/<module-name>/<module-name>.hpp"`.
 - Every module header includes the generated config header:
-  `#include "<project-name>/config.h"` (the config include dir is published
-  by the aggregate `${PROJECT_NAME}_lib` target).
+  `#include "<project-name>/config.h"`.
 - Namespace: all modules use the unified namespace defined by
-  `PROJECT_NAMESPACE` in `cmake/options.cmake` (default: the project name),
-  e.g. `myapp_NS::core` (via the `MYAPP_NS` macro), `myapp_NS::algorithm`. In **all** source files (headers,
-  `.cpp`, tests), reference the namespace via the `<namespace-macro>`
-  placeholder (e.g. `namespace <namespace-macro>_NS::core { ... }`,
-  `<namespace-macro>_NS::core::Greeter`), which is replaced with
-  `<PROJECT_NAME_UPPER>` at instantiation so the namespace is configurable at
-  configure time. Only `#include` paths use the concrete name
-  (`<project-name>/<module>/...`).
-- New module = new `src/<mod>/` dir (with its own `CMakeLists.txt` from
-  `templates/module-CMakeLists.txt.tmpl` if it has no module dependencies, or
-  `templates/module-deps-CMakeLists.txt.tmpl` if it depends on core,
-  `include/<project-name>/<mod>/` inside) + `tests/<mod>/` dir; then add
-  `add_subdirectory(<mod>)` in
+  `PROJECT_NAMESPACE` in `cmake/options.cmake` (default: the project name).
+  In **all** source files, reference the namespace via the
+  `<namespace-macro>` placeholder; only `#include` paths use the concrete
+  `<project-name>`.
+- New module = new `src/<mod>/` dir (CMakeLists from
+  `templates/module-CMakeLists.txt.tmpl` if no module dependencies, or
+  `templates/module-deps-CMakeLists.txt.tmpl` if it depends on core) +
+  `tests/<mod>/` dir; then add `add_subdirectory(<mod>)` in
   `src/CMakeLists.txt` and link it into `${PROJECT_NAME}_lib` in the
   top-level `CMakeLists.txt` (two lines).
 
 2. Generate files from templates (copy and replace placeholders):
 
-- `templates/CMakeLists.txt.tmpl` → `CMakeLists.txt` (replace `<project-name>`, `<cxx-standard>`, and `<PROJECT_NAME_UPPER>` placeholders — includes the trailing `if(<PROJECT_NAME_UPPER>_BUILD_TESTS)` block with `enable_testing()` and `add_subdirectory(tests)`)
-- `templates/CMakePresets.json.tmpl` → `CMakePresets.json`
+- `templates/CMakeLists.txt.tmpl` → `CMakeLists.txt`
+- `templates/CMakePresets.json.tmpl` → `CMakePresets.json` (vcpkg toolchain
+  already wired in the base preset)
+- `templates/vcpkg.json.tmpl` → `vcpkg.json` (replace `<project-name-dashed>`)
+- `vcpkg-configuration.json` → project root (see built-in conventions above
+  for the baseline; no template — content is project-independent apart from
+  the baseline hash)
 - `templates/src-CMakeLists.txt.tmpl` → `src/CMakeLists.txt`
-- `templates/options.cmake.tmpl` → `cmake/options.cmake` (replace `<PROJECT_NAME_UPPER>` with the uppercased project name)
-- `templates/common.cmake.tmpl` → `cmake/common.cmake` (replace `<PROJECT_NAME_UPPER>` with the uppercased project name)
-- `templates/config.h.in.tmpl` → `cmake/config.h.in` (replace `<PROJECT_NAME_UPPER>` and `<project-name>` placeholders)
+- `templates/options.cmake.tmpl` → `cmake/options.cmake`
+- `templates/common.cmake.tmpl` → `cmake/common.cmake`
+- `templates/config.h.in.tmpl` → `cmake/config.h.in`
 - `templates/thirdparty.cmake.tmpl` → `cmake/thirdparty.cmake`
 - `templates/thirdparty-README.md.tmpl` → `cmake/thirdparty/README.md`
 - `templates/thirdparty-googletest.cmake.tmpl` → `cmake/thirdparty/googletest.cmake`
@@ -254,8 +242,6 @@ if the user asks.
 - `templates/test-common-src-util.cpp.tmpl` → `tests/common/src/util.cpp`
 - `templates/test-module-CMakeLists.txt.tmpl` → `tests/core/CMakeLists.txt` (replace `<module-name>` with `core`, `<MODULE_NAME_UPPER>` with `CORE`)
 - `templates/test-module-CMakeLists.txt.tmpl` → `tests/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`)
-- In `cmake/options.cmake`, set `<PROJECT_NAME_UPPER>_BUILD_TESTS` default to `ON`
-  (the googletest module is loaded from `cmake/thirdparty.cmake` under this option)
 
 4. Do NOT initialize a git repository — the skill only generates project
    files. Git initialization/commits are left to the user.

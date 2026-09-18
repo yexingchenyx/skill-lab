@@ -1,16 +1,28 @@
-include(FetchContent)
-
-# Fetch and make available Google Test as a namespaced target
-# (GTest::gtest_main, GTest::gtest) so consumers can link directly:
-#   target_link_libraries(<target> PRIVATE GTest::gtest_main)
+# Google Test (default test framework).
+# Strategy: prefer a locally installed GTest (find_package);
+# fall back to FetchContent only if not found.
+# Provides namespaced targets GTest::gtest_main, GTest::gtest.
 # Loaded from cmake/thirdparty.cmake when <PROJECT_NAME_UPPER>_BUILD_TESTS is ON.
 
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+find_package(GTest QUIET)
+
+if(NOT GTest_FOUND)
+  message(STATUS "GTest not found locally — fetching via FetchContent")
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  )
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+endif()
 # googletest already provides the namespaced targets
 # GTest::gtest_main and GTest::gtest — nothing more to alias.
+
+# Final summary: version and location of the GTest actually used.
+if(TARGET GTest::gtest)
+  get_target_property(_gtest_inc GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(_gtest_loc GTest::gtest LOCATION)
+  message(STATUS "GTest version: ${GTest_VERSION} | include: ${_gtest_inc} | target: ${_gtest_loc}")
+endif()

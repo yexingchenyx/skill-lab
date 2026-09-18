@@ -48,23 +48,41 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
 ## Steps
 
 1. **Create `cmake/thirdparty/<lib>.cmake`** following the pattern of the
-   existing `googletest.cmake`:
+   existing `googletest.cmake` / `cli11.cmake`: try `find_package` for a
+   locally installed copy first, and only fall back to `FetchContent` when
+   the local library is not found. Print a STATUS message either way:
 
    ```cmake
-   include(FetchContent)
-
    # <lib> as a namespaced target <lib>::<lib>
    # Loaded from cmake/thirdparty.cmake; link with:
    #   target_link_libraries(<target> PRIVATE <lib>::<lib>)
+   # Strategy: prefer a locally installed <lib> (find_package);
+   # fall back to FetchContent only if not found.
 
    find_package(<lib> <version> QUIET)
+
    if(NOT <lib>_FOUND)
+     message(STATUS "<lib> not found locally — fetching via FetchContent")
+     include(FetchContent)
      FetchContent_Declare(
        <lib>
        URL https://github.com/<org>/<lib>/archive/refs/tags/v<version>.zip
        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
      )
      FetchContent_MakeAvailable(<lib>)
+   else()
+     message(STATUS "Using local <lib> ${<lib>_VERSION}")
+   endif()
+   # Final summary: version and location of the <lib> actually used.
+   if(TARGET <lib>::<lib>)
+     get_target_property(_<lib>_inc <lib>::<lib> INTERFACE_INCLUDE_DIRECTORIES)
+     get_target_property(_<lib>_type <lib>::<lib> TYPE)
+     if(_<lib>_type STREQUAL "STATIC_LIBRARY" OR _<lib>_type STREQUAL "SHARED_LIBRARY")
+       set(_<lib>_loc "built from source (FetchContent)")
+     else()
+       get_target_property(_<lib>_loc <lib>::<lib> LOCATION)
+     endif()
+     message(STATUS "<lib> version: ${<lib>_VERSION} | include: ${_<lib>_inc} | target: ${_<lib>_loc}")
    endif()
    # If <lib> does not define <lib>::<lib> itself, alias it here:
    # add_library(<lib>::<lib> ALIAS <lib>)
@@ -73,6 +91,7 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
    Notes:
    - If the library supports CMake find-module config files (`fmt`, `re2`,
      `spdlog`, ... do), keep the `find_package` attempt and pass version.
+   - `include(FetchContent)` goes inside the not-found branch (local-first).
    - For FetchContent, prefer a release tag URL; use `GIT_REPOSITORY`+
      `GIT_TAG` only if no release archive exists.
    - If the upstream target name differs (e.g. `fmt` provides `fmt::fmt`
@@ -86,6 +105,30 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
    include(<lib>)  # provides <lib>::<lib>
    ```
    Remove the corresponding commented example line if present.
+
+2b. **Add it to `vcpkg.json`** (project root, vcpkg manifest): append the
+   library to `dependencies` so it is auto-installed when the project is
+   configured with `CPP_PJ_USE_VCPKG=ON` (vcpkg manifest mode):
+   ```json
+   { "name": "<lib>", "version>=": "<version>" }
+   ```
+   (a plain string `"<lib>"` is fine if no version pinning is needed).
+   Keep the manifest in sync with `cmake/thirdparty/` — every library
+   registered there should appear in `vcpkg.json`.
+
+   Note on version reproducibility: the exact resolved versions are pinned
+   by the `baseline` commit in `vcpkg-configuration.json` (acts like a
+   lockfile). If the requested `version>=` is newer than what the current
+   baseline provides, update the baseline:
+   `git -C <vcpkg-root> rev-parse HEAD` → put the hash into
+   `vcpkg-configuration.json`'s `default-registry.baseline` (or
+   `vcpkg.json`'s `builtin-baseline`) and commit it, so all users/CI
+   resolve the same versions.
+
+   Note: when the project uses vcpkg (toolchain wired via the preset's
+   `toolchainFile`), manifest-mode dependencies are installed into
+   `build/vcpkg_installed/<triplet>/` and `find_package` resolves them
+   there automatically — the local-first logic above just works.
 
 3. **Link it into the consuming module** (only when the user specified
    which module(s) should use the library — otherwise skip this step; the
@@ -114,6 +157,8 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
 - `cmake/thirdparty/fmt.cmake`: find_package(9.1.0) → FetchContent fallback
   to `fmtlib/fmt` v10.2.1; `fmt` already exports `fmt::fmt`.
 - `cmake/thirdparty.cmake`: add `include(fmt)`.
+- `vcpkg.json`: add `{ "name": "fmt", "version>=": "10.2.1" }` to
+  `dependencies`.
 - `src/core/CMakeLists.txt`:
   `target_link_libraries(${PROJECT_NAME}_core PUBLIC fmt::fmt)`.
 

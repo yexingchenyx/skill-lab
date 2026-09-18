@@ -29,3 +29,27 @@
 // Build metadata (set in cmake/common.cmake)
 #define <PROJECT_NAME_UPPER>_GIT_COMMIT "@PROJECT_GIT_COMMIT@"
 #define <PROJECT_NAME_UPPER>_BUILD_TIME "@PROJECT_BUILD_TIME@"
+
+// ---------------------------------------------------------------------------
+// Unified library export macro (shared by ALL modules).
+// Each module defines <PROJECT_NAME_UPPER>_EXPORTS (PRIVATE) while building
+// itself; <PROJECT_NAME_UPPER>_STATIC_DEFINE (set when BUILD_SHARED_LIBS=OFF)
+// disables dllexport/dllimport entirely for static builds/consumption.
+// ---------------------------------------------------------------------------
+#if defined(_WIN32) || defined(__CYGWIN__)
+#  ifdef <PROJECT_NAME_UPPER>_STATIC_DEFINE
+#    define <PROJECT_NAME_UPPER>_API
+#  elif defined(<PROJECT_NAME_UPPER>_EXPORTS)
+     /* We are building one of this project's libraries */
+#    define <PROJECT_NAME_UPPER>_API __declspec(dllexport)
+#  else
+     /* We are consuming this project's libraries */
+#    define <PROJECT_NAME_UPPER>_API __declspec(dllimport)
+#  endif
+#else
+#  if __GNUC__ >= 4
+#    define <PROJECT_NAME_UPPER>_API __attribute__((visibility("default")))
+#  else
+#    define <PROJECT_NAME_UPPER>_API
+#  endif
+#endif

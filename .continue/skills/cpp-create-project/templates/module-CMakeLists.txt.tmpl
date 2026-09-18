@@ -1,8 +1,18 @@
 # <module-name> module: self-contained library target (no module dependencies).
 # Sources in src/, headers in include/<project-name>/<module-name>/.
 file(GLOB <MODULE_NAME_UPPER>_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-add_library(${PROJECT_NAME}_<module-name> ${<MODULE_NAME_UPPER>_SOURCES})
+# SHARED: project modules build as dynamic libraries by default
+# (override with -DBUILD_SHARED_LIBS=OFF for static).
+add_library(${PROJECT_NAME}_<module-name> SHARED ${<MODULE_NAME_UPPER>_SOURCES})
 target_include_directories(${PROJECT_NAME}_<module-name>
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${<PROJECT_NAME_UPPER>_CONFIG_DIR})
+
+# Unified export macro: all modules share <PROJECT_NAME_UPPER>_API from config.h.
+# <PROJECT_NAME_UPPER>_EXPORTS (PRIVATE) marks "building this library";
+# <PROJECT_NAME_UPPER>_STATIC_DEFINE (static builds) disables dllexport/dllimport.
+target_compile_definitions(${PROJECT_NAME}_<module-name> PRIVATE <PROJECT_NAME_UPPER>_EXPORTS)
+if(NOT BUILD_SHARED_LIBS)
+  target_compile_definitions(${PROJECT_NAME}_<module-name> PUBLIC <PROJECT_NAME_UPPER>_STATIC_DEFINE)
+endif()
 # Namespaced alias: consumers link <project-name>::<module-name>
 add_library(${PROJECT_NAME}::<module-name> ALIAS ${PROJECT_NAME}_<module-name>)

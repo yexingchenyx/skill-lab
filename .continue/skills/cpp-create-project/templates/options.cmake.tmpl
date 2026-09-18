@@ -15,6 +15,30 @@ option(<PROJECT_NAME_UPPER>_BUILD_TESTS "Build unit tests" ON)
 option(<PROJECT_NAME_UPPER>_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 # ---------------------------------------------------------------------------
+# vcpkg support.
+# The vcpkg toolchain is wired via the CMakePresets "base" preset
+# "toolchainFile" (must be set before project(); setting
+# CMAKE_TOOLCHAIN_FILE here would be too late). This block is only a
+# fallback/validation layer for non-preset configure runs.
+# ---------------------------------------------------------------------------
+option(<PROJECT_NAME_UPPER>_USE_VCPKG "Use vcpkg for dependency management" OFF)
+set(<PROJECT_NAME_UPPER>_VCPKG_ROOT "$ENV{HOME}/vcpkg" CACHE PATH "Path to the vcpkg installation root")
+
+if(<PROJECT_NAME_UPPER>_USE_VCPKG)
+  if(NOT EXISTS "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+    message(FATAL_ERROR
+      "<PROJECT_NAME_UPPER>_USE_VCPKG is ON but the vcpkg toolchain was not found at "
+      "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake — "
+      "set <PROJECT_NAME_UPPER>_VCPKG_ROOT to your vcpkg installation directory.")
+  endif()
+  if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set(CMAKE_TOOLCHAIN_FILE "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        CACHE FILEPATH "vcpkg toolchain file")
+    message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+  endif()
+endif()
+
+# ---------------------------------------------------------------------------
 # Unified C++ namespace for all modules. Defaults to the project name;
 # override on the command line with -DPROJECT_NAMESPACE=...
 # (PROJECT_NAMESPACE is the fixed configure_file variable name consumed by
