@@ -48,9 +48,13 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
 ## Steps
 
 1. **Create `cmake/thirdparty/<lib>.cmake`** following the pattern of the
-   existing `googletest.cmake` / `cli11.cmake`: try `find_package` for a
-   locally installed copy first, and only fall back to `FetchContent` when
-   the local library is not found. Print a STATUS message either way:
+   project's existing `cmake/thirdparty/googletest.cmake` / `cli11.cmake`
+   (or the `cpp-create-project` skill's
+   `templates/thirdparty-googletest.cmake.tmpl` /
+   `templates/thirdparty-cli11.cmake.tmpl`): try `find_package` for a
+   locally installed copy first, fall back to `FetchContent` only when not
+   found, alias to `<lib>::<lib>` if upstream doesn't provide it, and print
+   a final STATUS summary with the version and location actually used:
 
    ```cmake
    # <lib> as a namespaced target <lib>::<lib>
@@ -89,13 +93,12 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
    ```
 
    Notes:
-   - If the library supports CMake find-module config files (`fmt`, `re2`,
-     `spdlog`, ... do), keep the `find_package` attempt and pass version.
+   - If the library supports CMake config files (`fmt`, `re2`, `spdlog`, ...
+     do), keep the `find_package` attempt and pass the version.
    - `include(FetchContent)` goes inside the not-found branch (local-first).
    - For FetchContent, prefer a release tag URL; use `GIT_REPOSITORY`+
      `GIT_TAG` only if no release archive exists.
-   - If the upstream target name differs (e.g. `fmt` provides `fmt::fmt`
-     already; `spdlog` provides `spdlog::spdlog`), alias only when needed.
+   - Alias only when the upstream target name differs.
 
 2. **Register it in `cmake/thirdparty.cmake`**: add one line
    `include(<lib>)` (the file lives in `cmake/thirdparty/`, which is already

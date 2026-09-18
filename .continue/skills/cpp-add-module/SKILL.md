@@ -65,6 +65,19 @@ tests/<module-name>/
 cmake --preset release && cmake --build --preset release && ctest --preset release
 ```
 
+## Built-in conventions (already in the templates — do not re-implement)
+- The module CMakeLists templates already emit a **shared library** target
+  (`add_library(${PROJECT_NAME}_<module> SHARED ...)`), define
+  `CPP_PJ_EXPORTS` PRIVATE, and set `CPP_PJ_STATIC_DEFINE` PUBLIC when
+  `BUILD_SHARED_LIBS=OFF` — no manual export-macro wiring is needed.
+- Headers already mark exported symbols with `<PROJECT_NAME_UPPER>_API`
+  (the single unified macro from `config.h`); new modules need **no**
+  `config.h` changes.
+- `vcpkg.json` / `vcpkg-configuration.json` are **not** affected by adding
+  a module (only third-party libraries are, via `cpp-add-thirdparty`).
+- The `release`/`debug` presets already wire the vcpkg toolchain
+  (`toolchainFile` in `CMakePresets.json`) — no extra configure flags.
+
 ## Notes
 - Header path convention: `#include "<project-name>/<module-name>/<header>.hpp"`.
 - Namespace: `namespace <PROJECT_NAME_UPPER>_NS::<module-name> { ... }`.
