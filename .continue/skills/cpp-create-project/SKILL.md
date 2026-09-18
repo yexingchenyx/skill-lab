@@ -26,7 +26,6 @@ All templates in `templates/` use these placeholders — replace every occurrenc
 |-----------------|---------------------------|
 | `<project-name>`| `myapp`                   |
 | `<project-name-dashed>` | `my-app` (underscores → dashes; used in `vcpkg.json` name) |
-| `<ProjectName>` | `MyApp`                   |
 | `<PROJECT_NAME_UPPER>` | `MYAPP`            |
 | `<cxx-standard>`| `20`                      |
 | `<namespace-macro>` | `MYAPP` (expands to the config.h namespace macro, used in `namespace X::...` declarations) |
@@ -94,7 +93,7 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 ├── README.md
 ├── .gitignore
 ├── cmake/                          # CMake modules
-│   ├── options.cmake               # build options + vcpkg fallback/validation
+│   ├── options.cmake               # build options + vcpkg toolchain (included BEFORE project())
 │   ├── common.cmake                # output dirs, git commit, build time, config.h generation
 │   ├── config.h.in                 # template for the generated config header (incl. <PRJ>_API)
 │   ├── thirdparty.cmake            # third-party loading entry point
@@ -154,16 +153,8 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
   namespaced aliases, plus the generated config header include dir; the app
   and tests link against `${PROJECT_NAME}_lib`.
 - Each module's tests live in `tests/<module-name>/` (one test file per
-  module). The top-level `CMakeLists.txt` calls `enable_testing()` (inside
-  the BUILD_TESTS if-block); `tests/CMakeLists.txt` adds each module's tests
-  via `add_subdirectory`; each `tests/<module-name>/CMakeLists.txt` defines
-  a test target `<project-name>_<module-name>_tests` (globbing `*.cpp`,
-  linking `${PROJECT_NAME}::test_common` and `GTest::gtest_main`, discovered
-  via `gtest_discover_tests`).
-- `tests/common/` holds a shared test-utilities **static library** target
-  `test_common` (alias `<project-name>::test_common`). It PUBLICly publishes
-  `include/`, links `${PROJECT_NAME}::${PROJECT_NAME}_lib` and
-  `GTest::gtest` PUBLIC, and must be added via `add_subdirectory(common)`
+  module); `tests/common/` is a shared test-utilities **static library**
+  (`test_common`) that must be added via `add_subdirectory(common)`
   **before** the module test subdirectories in `tests/CMakeLists.txt`.
 - `cli/common/` holds a shared CLI-utilities **static library** target
   `cli_common` (alias `<project-name>::cli_common`): links `CLI11::CLI11`
@@ -214,7 +205,7 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 - `templates/module-deps-CMakeLists.txt.tmpl` → `src/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`; the core link is already wired in)
 - `templates/cli-CMakeLists.txt.tmpl` → `cli/CMakeLists.txt`
 - `templates/cli-common-CMakeLists.txt.tmpl` → `cli/common/CMakeLists.txt`
-- `templates/cli-common-include/cpp_pj/cli/util.hpp.tmpl` → `cli/common/include/<project-name>/cli/util.hpp`
+- `templates/cli-common-include/cpp_pj/cli/util.hpp.tmpl` → `cli/common/include/<project-name>/cli/util.hpp` (rename the `cpp_pj` directory segment to `<project-name>`)
 - `templates/cli-common-src-util.cpp.tmpl` → `cli/common/src/util.cpp`
 - `templates/cli-foo-CMakeLists.txt.tmpl` → `cli/foo/CMakeLists.txt`
 - `templates/cli-foo-main.cpp.tmpl` → `cli/foo/main.cpp`
