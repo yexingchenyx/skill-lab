@@ -44,12 +44,12 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 
 ## Built-in conventions (already in the templates — do not re-implement)
 
-- **vcpkg (default ON)**: the `CMakePresets.json` "base" preset wires the
-  toolchain via `"toolchainFile": "$env{HOME}/vcpkg/scripts/buildsystems/vcpkg.cmake"`
-  plus `CPP_PJ_USE_VCPKG=ON` and `CPP_PJ_VCPKG_ROOT`. The toolchain MUST be
-  wired via the preset's `toolchainFile` — setting `CMAKE_TOOLCHAIN_FILE`
-  after `project()` (e.g. in `cmake/options.cmake`) is silently ignored;
-  the `options.cmake` vcpkg block is only a fallback/validation layer.
+- **vcpkg (default ON)**: the `CMakePresets.json` "base" preset sets
+  `CPP_PJ_USE_VCPKG=ON` and `CPP_PJ_VCPKG_ROOT` (no `toolchainFile` in the
+  preset). The top-level `CMakeLists.txt` includes `cmake/options.cmake`
+  **before `project()`**, and `options.cmake` sets `CMAKE_TOOLCHAIN_FILE`
+  from `<PROJECT_NAME_UPPER>_VCPKG_ROOT` — the toolchain must be active
+  before the first `project()` call, which is why the include order matters.
 - **`vcpkg.json` manifest**: lists default deps (`cli11`, `gtest >= 1.14.0`);
   vcpkg installs them into `build/vcpkg_installed/<triplet>/` at configure
   time. Keep in sync when adding libraries via `cpp-add-thirdparty`.
@@ -86,7 +86,7 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 ```
 <project-name>/
 ├── CMakeLists.txt
-├── CMakePresets.json               # presets (release, debug); base wires the vcpkg toolchain
+├── CMakePresets.json               # presets: release, debug, release-static, debug-static
 ├── vcpkg.json                      # vcpkg manifest (default deps: cli11, gtest)
 ├── vcpkg-configuration.json        # pins the baseline commit (dependency lockfile)
 ├── README.md
@@ -101,7 +101,7 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 │       ├── cli11.cmake             # CLI11 command-line parsing (always)
 │       └── googletest.cmake        (always — GTest is the default test framework)
 ├── src/                            # one self-contained directory per module
-│   ├── core/                       # SHARED lib, target <project>_core
+│   ├── core/                       # target <project>_core (lib type via BUILD_SHARED_LIBS)
 │   │   ├── CMakeLists.txt
 │   │   ├── include/<project-name>/core/foo.hpp
 │   │   └── src/foo.cpp
@@ -190,9 +190,7 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 2. Generate files from templates (copy and replace placeholders):
 
 - `templates/CMakeLists.txt.tmpl` → `CMakeLists.txt`
-- `templates/CMakePresets.json.tmpl` → `CMakePresets.json` (vcpkg toolchain
-  and `BUILD_SHARED_LIBS=ON` wired in the base preset; `release-static` /
-  `debug-static` presets switch to static libs)
+- `templates/CMakePresets.json.tmpl` → `CMakePresets.json`
 - `templates/vcpkg.json.tmpl` → `vcpkg.json` (replace `<project-name-dashed>`)
 - `vcpkg-configuration.json` → project root (see built-in conventions above
   for the baseline; no template — content is project-independent apart from

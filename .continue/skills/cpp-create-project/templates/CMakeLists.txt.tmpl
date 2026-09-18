@@ -1,12 +1,15 @@
 cmake_minimum_required(VERSION 3.14)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+                             ${CMAKE_CURRENT_SOURCE_DIR}/cmake/thirdparty)
+# options MUST be included before project(): when <PRJ>_USE_VCPKG is ON it
+# sets CMAKE_TOOLCHAIN_FILE (from <PRJ>_VCPKG_ROOT) so the vcpkg toolchain
+# is active for the first project() call.
+include(options)
 project(<project-name> VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD <cxx-standard>)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake
-                             ${CMAKE_CURRENT_SOURCE_DIR}/cmake/thirdparty)
-include(options)
 include(common)
 include(thirdparty)
 
