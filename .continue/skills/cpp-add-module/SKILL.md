@@ -75,8 +75,10 @@ cmake --preset release && cmake --build --preset release && ctest --preset relea
   `config.h` changes.
 - `vcpkg.json` / `vcpkg-configuration.json` are **not** affected by adding
   a module (only third-party libraries are, via `cpp-add-thirdparty`).
-- The `release`/`debug` presets already wire the vcpkg toolchain
-  (`toolchainFile` in `CMakePresets.json`) — no extra configure flags.
+- The `release`/`debug` (and `release-static`/`debug-static`) presets
+  already wire the vcpkg toolchain (`toolchainFile` in `CMakePresets.json`)
+  and the shared/static switch (`BUILD_SHARED_LIBS`) — no extra configure
+  flags.
 
 ## Notes
 - Header path convention: `#include "<project-name>/<module-name>/<header>.hpp"`.

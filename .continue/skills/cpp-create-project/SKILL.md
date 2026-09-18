@@ -76,8 +76,12 @@ placeholders above can never break anything**:
   source (FetchContent)" since `LOCATION` is unavailable). Every dependency
   must expose a namespaced target (`<lib>::<lib>`); never leak include
   dirs/definitions globally. Full rules: `templates/thirdparty-README.md.tmpl`.
-- **Modules are SHARED libraries** by default (`-DBUILD_SHARED_LIBS=OFF`
-  switches to static).
+- **Dynamic vs static via presets**: `BUILD_SHARED_LIBS=ON` is set in the
+  `CMakePresets.json` "base" preset (dynamic by default); `release-static`
+  / `debug-static` presets set it to `OFF` for static builds. Module
+  CMakeLists use a plain `add_library(...)` (no hardcoded `SHARED`) and
+  gate `<PROJECT_NAME_UPPER>_STATIC_DEFINE` on `BUILD_SHARED_LIBS`, so the
+  switch requires no source/CMakeLists edits.
 - **Unified export macro**: all modules share a single
   `<PROJECT_NAME_UPPER>_API` macro defined in the generated `config.h`
   (dllexport/dllimport on Windows, visibility on GCC/Clang; expands to
@@ -199,7 +203,8 @@ placeholders above can never break anything**:
 
 - `templates/CMakeLists.txt.tmpl` → `CMakeLists.txt`
 - `templates/CMakePresets.json.tmpl` → `CMakePresets.json` (vcpkg toolchain
-  already wired in the base preset)
+  and `BUILD_SHARED_LIBS=ON` wired in the base preset; `release-static` /
+  `debug-static` presets switch to static libs)
 - `templates/vcpkg.json.tmpl` → `vcpkg.json` (replace `<project-name-dashed>`)
 - `vcpkg-configuration.json` → project root (see built-in conventions above
   for the baseline; no template — content is project-independent apart from

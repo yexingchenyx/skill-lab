@@ -1,9 +1,9 @@
 # <module-name> module: self-contained library target that depends on core.
 # Sources in src/, headers in include/<project-name>/<module-name>/.
 file(GLOB <MODULE_NAME_UPPER>_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
-# SHARED: project modules build as dynamic libraries by default
-# (override with -DBUILD_SHARED_LIBS=OFF for static).
-add_library(${PROJECT_NAME}_<module-name> SHARED ${<MODULE_NAME_UPPER>_SOURCES})
+# Dynamic vs static is controlled by BUILD_SHARED_LIBS (set in CMakePresets:
+# ON in base, OFF in *-static presets).
+add_library(${PROJECT_NAME}_<module-name> ${<MODULE_NAME_UPPER>_SOURCES})
 target_include_directories(${PROJECT_NAME}_<module-name>
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${<PROJECT_NAME_UPPER>_CONFIG_DIR})
 # This module includes headers from core, so it MUST link core (already wired).
