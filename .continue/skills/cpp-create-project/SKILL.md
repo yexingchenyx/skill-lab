@@ -140,7 +140,7 @@ implemented in the templates; do not re-implement them:
 │   ├── CMakeLists.txt              # target <project>_<module> + ALIAS <project>::<module>
 │   ├── include/<project-name>/<module>/
 │   └── src/
-├── cli/                            # common/ (static lib cli_common) + foo/ (demo tool <project>_cli_foo)
+├── cli/                            # common/ (static lib <project>_cli_common) + foo/ (demo tool <project>_cli_foo)
 └── tests/<module>/                 # one test target <project>_<module>_tests per module
 ```
 
