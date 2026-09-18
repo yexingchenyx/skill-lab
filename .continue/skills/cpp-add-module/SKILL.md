@@ -35,7 +35,8 @@ tests/<module-name>/
 
 2. Generate files from the `cpp-create-project` skill's templates
    (replace placeholders: `<project-name>`, `<PROJECT_NAME_UPPER>`,
-   `<namespace-macro>`, `<module-name>`, `<MODULE_NAME_UPPER>`):
+   `<module-name>`, `<MODULE_NAME_UPPER>`; create destination directories
+   with `mkdir -p` first — plain `cp` does not create parent directories):
 
 - Depends on `core` (default; links `${PROJECT_NAME}::core` PUBLIC):
   - `templates/module-deps-CMakeLists.txt.tmpl` → `src/<module-name>/CMakeLists.txt`
@@ -66,19 +67,21 @@ cmake --preset release && cmake --build --preset release && ctest --preset relea
 ```
 
 ## Built-in conventions (already in the templates — do not re-implement)
-- The module CMakeLists templates already emit a **shared library** target
-  (`add_library(${PROJECT_NAME}_<module> SHARED ...)`), define
-  `CPP_PJ_EXPORTS` PRIVATE, and set `CPP_PJ_STATIC_DEFINE` PUBLIC when
-  `BUILD_SHARED_LIBS=OFF` — no manual export-macro wiring is needed.
+- The module CMakeLists templates emit a plain
+  `add_library(${PROJECT_NAME}_<module> ...)` — the lib type (shared/static)
+  is controlled by `BUILD_SHARED_LIBS` from the presets, and
+  `<PROJECT_NAME_UPPER>_STATIC_DEFINE` is set PUBLIC automatically when
+  building static — no manual export-macro wiring is needed.
 - Headers already mark exported symbols with `<PROJECT_NAME_UPPER>_API`
-  (the single unified macro from `config.h`); new modules need **no**
-  `config.h` changes.
+  (the single unified macro from the generated `config.h`); new modules
+  need **no** `config.h` changes.
+- Namespaces use `<PROJECT_NAME_UPPER>_NS` (defined in the generated
+  `config.h`; expands from `PROJECT_NAMESPACE`, default = project name).
 - `vcpkg.json` / `vcpkg-configuration.json` are **not** affected by adding
   a module (only third-party libraries are, via `cpp-add-thirdparty`).
-- The `release`/`debug` (and `release-static`/`debug-static`) presets
-  already wire the vcpkg toolchain (`toolchainFile` in `CMakePresets.json`)
-  and the shared/static switch (`BUILD_SHARED_LIBS`) — no extra configure
-  flags.
+- The presets already wire the vcpkg toolchain (`options.cmake` sets
+  `CMAKE_TOOLCHAIN_FILE` before `project()`) and the shared/static switch
+  (`BUILD_SHARED_LIBS`) — no extra configure flags.
 
 ## Notes
 - Header path convention: `#include "<project-name>/<module-name>/<header>.hpp"`.

@@ -43,7 +43,10 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
 3. **One file per library.** Each dependency lives in
    `cmake/thirdparty/<lib>.cmake`.
 4. **Prefer `find_package`; fall back to `FetchContent`.** Pin an exact
-   version/tag when using FetchContent.
+   version/tag when using FetchContent. Do NOT set `FETCHCONTENT_BASE_DIR`
+   yourself — `cmake/thirdparty.cmake` already sets it (CACHE PATH FORCE) to
+   `<project>/dep_installed/fetchcontent` (outside `build/`, survives
+   `rm -rf build`).
 
 ## Steps
 
@@ -62,6 +65,8 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
    #   target_link_libraries(<target> PRIVATE <lib>::<lib>)
    # Strategy: prefer a locally installed <lib> (find_package);
    # fall back to FetchContent only if not found.
+   # NOTE: FETCHCONTENT_BASE_DIR is already set in cmake/thirdparty.cmake
+   # (<project>/dep_installed/fetchcontent, outside build/) — do not set it here.
 
    find_package(<lib> <version> QUIET)
 
@@ -74,19 +79,19 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
      )
      FetchContent_MakeAvailable(<lib>)
-   else()
-     message(STATUS "Using local <lib> ${<lib>_VERSION}")
    endif()
-   # Final summary: version and location of the <lib> actually used.
+
+   # Final summary: version and source of the <lib> actually used.
+   # Detect the source via the find_package result (NOT the target type —
+   # vcpkg INTERFACE/IMPORTED targets have no LOCATION and would be misreported).
    if(TARGET <lib>::<lib>)
      get_target_property(_<lib>_inc <lib>::<lib> INTERFACE_INCLUDE_DIRECTORIES)
-     get_target_property(_<lib>_type <lib>::<lib> TYPE)
-     if(_<lib>_type STREQUAL "STATIC_LIBRARY" OR _<lib>_type STREQUAL "SHARED_LIBRARY")
-       set(_<lib>_loc "built from source (FetchContent)")
+     if(<lib>_FOUND)
+       set(_<lib>_src "vcpkg/local install")
      else()
-       get_target_property(_<lib>_loc <lib>::<lib> LOCATION)
+       set(_<lib>_src "built from source (FetchContent)")
      endif()
-     message(STATUS "<lib> version: ${<lib>_VERSION} | include: ${_<lib>_inc} | target: ${_<lib>_loc}")
+     message(STATUS "<lib> version: ${<lib>_VERSION} (${_<lib>_src}) | include: ${_<lib>_inc}")
    endif()
    # If <lib> does not define <lib>::<lib> itself, alias it here:
    # add_library(<lib>::<lib> ALIAS <lib>)
@@ -111,7 +116,7 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
 
 2b. **Add it to `vcpkg.json`** (project root, vcpkg manifest): append the
    library to `dependencies` so it is auto-installed when the project is
-   configured with `CPP_PJ_USE_VCPKG=ON` (vcpkg manifest mode):
+   configured with `<PROJECT_NAME_UPPER>_USE_VCPKG=ON` (vcpkg manifest mode):
    ```json
    { "name": "<lib>", "version>=": "<version>" }
    ```
@@ -121,17 +126,18 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
 
    Note on version reproducibility: the exact resolved versions are pinned
    by the `baseline` commit in `vcpkg-configuration.json` (acts like a
-   lockfile). If the requested `version>=` is newer than what the current
-   baseline provides, update the baseline:
-   `git -C <vcpkg-root> rev-parse HEAD` → put the hash into
-   `vcpkg-configuration.json`'s `default-registry.baseline` (or
-   `vcpkg.json`'s `builtin-baseline`) and commit it, so all users/CI
-   resolve the same versions.
+   lockfile; hardcoded in the `cpp-create-project` templates). If the
+   requested `version>=` is newer than what the current baseline provides,
+   update the baseline in BOTH `vcpkg.json` (`builtin-baseline`) and
+   `vcpkg-configuration.json` (`default-registry.baseline`) to the same
+   commit hash and commit it, so all users/CI resolve the same versions.
 
-   Note: when the project uses vcpkg (toolchain wired via the preset's
-   `toolchainFile`), manifest-mode dependencies are installed into
-   `build/vcpkg_installed/<triplet>/` and `find_package` resolves them
-   there automatically — the local-first logic above just works.
+   Note: when the project uses vcpkg (`<PROJECT_NAME_UPPER>_USE_VCPKG=ON` in
+   the base preset; `options.cmake` sets `CMAKE_TOOLCHAIN_FILE` before
+   `project()`), manifest-mode dependencies are installed into
+   `vcpkg_installed/<triplet>/` at the project root (outside `build/`) and
+   `find_package` resolves them there automatically — the local-first logic
+   above just works.
 
 3. **Link it into the consuming module** (only when the user specified
    which module(s) should use the library — otherwise skip this step; the
