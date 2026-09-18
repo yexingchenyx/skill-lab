@@ -205,7 +205,7 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 - `templates/module-deps-CMakeLists.txt.tmpl` → `src/algorithm/CMakeLists.txt` (replace `<module-name>` with `algorithm`, `<MODULE_NAME_UPPER>` with `ALGORITHM`; the core link is already wired in)
 - `templates/cli-CMakeLists.txt.tmpl` → `cli/CMakeLists.txt`
 - `templates/cli-common-CMakeLists.txt.tmpl` → `cli/common/CMakeLists.txt`
-- `templates/cli-common-include/cpp_pj/cli/util.hpp.tmpl` → `cli/common/include/<project-name>/cli/util.hpp` (rename the `cpp_pj` directory segment to `<project-name>`)
+- `templates/cli-common-include/cli-util.hpp.tmpl` → `cli/common/include/<project-name>/cli/util.hpp`
 - `templates/cli-common-src-util.cpp.tmpl` → `cli/common/src/util.cpp`
 - `templates/cli-foo-CMakeLists.txt.tmpl` → `cli/foo/CMakeLists.txt`
 - `templates/cli-foo-main.cpp.tmpl` → `cli/foo/main.cpp`
