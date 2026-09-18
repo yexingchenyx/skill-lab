@@ -3,6 +3,16 @@
 # expose a namespaced target (e.g. re2::re2) per cmake/thirdparty/README.md.
 # Add one include() line per library you use.
 
+# Keep FetchContent downloads/builds outside build/ so they survive
+# `rm -rf build` and are shared across presets and build types.
+# Individual <lib>.cmake files can rely on this being set already.
+# NOTE: must be a CACHE variable (FORCE) — FetchContent.cmake initializes
+# FETCHCONTENT_BASE_DIR as a CACHE PATH defaulting to ${CMAKE_BINARY_DIR}/_deps,
+# and a plain set() would not override the cached value.
+set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/dep_installed/fetchcontent
+    CACHE PATH "FetchContent downloads/builds root (outside build/)" FORCE)
+file(MAKE_DIRECTORY ${FETCHCONTENT_BASE_DIR})
+
 include(cli11)  # provides CLI11::CLI11 (command-line parsing, always on)
 
 if(<PROJECT_NAME_UPPER>_BUILD_TESTS)

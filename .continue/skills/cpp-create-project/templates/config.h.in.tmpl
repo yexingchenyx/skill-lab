@@ -11,8 +11,8 @@
 #define <PROJECT_NAME_UPPER>_VERSION_PATCH @PROJECT_VERSION_PATCH@
 #define <PROJECT_NAME_UPPER>_VERSION "@PROJECT_VERSION@"
 
-// Unified C++ namespace for all modules (set in cmake/options.cmake,
-// forwarded to PROJECT_NAMESPACE in cmake/common.cmake).
+// Unified C++ namespace for all modules (default set in cmake/options.cmake;
+// override via CMakePresets.json "base" preset or -DPROJECT_NAMESPACE=...).
 // Use as namespace name: namespace <PROJECT_NAME_UPPER>_NS { ... }
 // or in string contexts: <PROJECT_NAME_UPPER>_NS_NAME
 #define <PROJECT_NAME_UPPER>_NS @PROJECT_NAMESPACE@

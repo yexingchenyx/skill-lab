@@ -3,7 +3,7 @@
 
 #include <sstream>
 
-namespace <namespace-macro>_NS::cli {
+namespace <PROJECT_NAME_UPPER>_NS::cli {
 
 std::string join_args(const std::vector<std::string>& args) {
     std::ostringstream oss;
@@ -21,4 +21,4 @@ std::string make_usage(const std::string& tool, const std::vector<std::string>& 
     return oss.str();
 }
 
-}  // namespace <namespace-macro>_NS::cli
+}  // namespace <PROJECT_NAME_UPPER>_NS::cli

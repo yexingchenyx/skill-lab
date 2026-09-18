@@ -16,8 +16,8 @@ int main(int argc, char** argv) {
 
   CLI11_PARSE(app, argc, argv);
 
-  std::cout << <namespace-macro>_NS::core::Greeter(name).greet() << "\n";
+  std::cout << <PROJECT_NAME_UPPER>_NS::core::Greeter(name).greet() << "\n";
   std::cout << "greet_sum = "
-            << <namespace-macro>_NS::algorithm::greet_sum(name, a, b) << "\n";
+            << <PROJECT_NAME_UPPER>_NS::algorithm::greet_sum(name, a, b) << "\n";
   return 0;
 }

@@ -9,6 +9,8 @@ find_package(GTest QUIET)
 if(NOT GTest_FOUND)
   message(STATUS "GTest not found locally — fetching via FetchContent")
   include(FetchContent)
+  # FETCHCONTENT_BASE_DIR is set in cmake/thirdparty.cmake (dep_installed/,
+  # outside build/) — downloads survive `rm -rf build`.
   FetchContent_Declare(
     googletest
     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
@@ -24,5 +26,10 @@ endif()
 if(TARGET GTest::gtest)
   get_target_property(_gtest_inc GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
   get_target_property(_gtest_loc GTest::gtest LOCATION)
-  message(STATUS "GTest version: ${GTest_VERSION} | include: ${_gtest_inc} | target: ${_gtest_loc}")
+  if(GTest_FOUND)
+    set(_gtest_src "vcpkg/local install")
+  else()
+    set(_gtest_src "built from source (FetchContent)")
+  endif()
+  message(STATUS "GTest version: ${GTest_VERSION} (${_gtest_src}) | include: ${_gtest_inc} | target: ${_gtest_loc}")
 endif()

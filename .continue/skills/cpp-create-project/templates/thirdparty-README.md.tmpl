@@ -16,6 +16,9 @@ target_link_libraries(<target> PRIVATE re2::re2)
 Rules for each `<lib>.cmake` file:
 
 1. Prefer `find_package` first; fall back to `FetchContent` if not found.
+   `FETCHCONTENT_BASE_DIR` is already set in `cmake/thirdparty.cmake`
+   (`<project>/dep_installed/fetchcontent`, outside `build/`) — do not
+   override it per-library.
 2. If the library does not provide a namespaced target itself, create an
    `INTERFACE`/`IMPORTED` alias that carries include dirs and flags:
 

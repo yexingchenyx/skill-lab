@@ -4,11 +4,11 @@
 
 // Tests for the `algorithm` module.
 TEST(Algorithm, Add) {
-    EXPECT_EQ(<namespace-macro>_NS::algorithm::add(1, 2), 3);
+    EXPECT_EQ(<PROJECT_NAME_UPPER>_NS::algorithm::add(1, 2), 3);
 }
 
 TEST(Algorithm, GreetSum) {
     // algorithm depends on core, so core types are usable here.
-    EXPECT_EQ(<namespace-macro>_NS::algorithm::greet_sum("world", 1, 2),
+    EXPECT_EQ(<PROJECT_NAME_UPPER>_NS::algorithm::greet_sum("world", 1, 2),
               "Hello, world! Sum is 3.");
 }

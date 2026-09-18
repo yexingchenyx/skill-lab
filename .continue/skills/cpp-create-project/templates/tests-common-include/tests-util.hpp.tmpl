@@ -7,7 +7,7 @@
 // Example: a common fixture base class.
 //   struct GreeterFixture : public ::testing::Test { ... };
 
-namespace <namespace-macro>_NS::tests {
+namespace <PROJECT_NAME_UPPER>_NS::tests {
 
 /// Join strings with a separator (handy for building expected outputs).
 std::string join(const std::vector<std::string>& parts, const std::string& sep);
@@ -15,4 +15,4 @@ std::string join(const std::vector<std::string>& parts, const std::string& sep);
 /// Simple string repetition helper, e.g. repeat("ab", 3) -> "ababab".
 std::string repeat(const std::string& s, int n);
 
-}  // namespace <namespace-macro>_NS::tests
+}  // namespace <PROJECT_NAME_UPPER>_NS::tests
