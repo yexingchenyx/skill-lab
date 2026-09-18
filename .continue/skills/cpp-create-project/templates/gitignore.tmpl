@@ -4,10 +4,9 @@ build-*/
 cmake-build-*/
 out/
 # vcpkg manifest-mode installs (kept outside build/ so they survive
-# `rm -rf build` and are shared across presets)
-vcpkg_installed/
-# FetchContent downloads/builds (kept outside build/, shared across presets)
-dep_installed/
+# `rm -rf build` and are shared across presets): <project>/install/vcpkg/
+# FetchContent downloads/builds: <project>/install/fetchcontent/
+install/
 # Generated config header (from cmake/config.h.in at configure time)
 include/
 cmake_install.cmake

@@ -9,7 +9,7 @@
 # NOTE: must be a CACHE variable (FORCE) — FetchContent.cmake initializes
 # FETCHCONTENT_BASE_DIR as a CACHE PATH defaulting to ${CMAKE_BINARY_DIR}/_deps,
 # and a plain set() would not override the cached value.
-set(FETCHCONTENT_BASE_DIR ${CMAKE_SOURCE_DIR}/dep_installed/fetchcontent
+set(FETCHCONTENT_BASE_DIR ${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/fetchcontent
     CACHE PATH "FetchContent downloads/builds root (outside build/)" FORCE)
 file(MAKE_DIRECTORY ${FETCHCONTENT_BASE_DIR})
 

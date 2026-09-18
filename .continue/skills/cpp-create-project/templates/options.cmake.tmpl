@@ -15,6 +15,16 @@ option(<PROJECT_NAME_UPPER>_BUILD_TESTS "Build unit tests" ON)
 option(<PROJECT_NAME_UPPER>_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 # ---------------------------------------------------------------------------
+# Download / install root for out-of-build artifacts.
+# Default: <project>/install — vcpkg manifest-mode installs go to
+# <project>/install/vcpkg/<triplet>/, FetchContent goes to
+# <project>/install/fetchcontent (see cmake/thirdparty.cmake).
+# Override with -D<PRJ>_DOWNLOAD_ROOT=...
+# ---------------------------------------------------------------------------
+set(<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT "${CMAKE_SOURCE_DIR}/install"
+    CACHE PATH "Root directory for vcpkg installs and FetchContent downloads")
+
+# ---------------------------------------------------------------------------
 # vcpkg support.
 # This file is included BEFORE project() from the top-level CMakeLists.txt,
 # so setting CMAKE_TOOLCHAIN_FILE here is effective for the first project()
@@ -33,7 +43,11 @@ if(<PROJECT_NAME_UPPER>_USE_VCPKG)
   endif()
   set(CMAKE_TOOLCHAIN_FILE "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       CACHE FILEPATH "vcpkg toolchain file")
+  # vcpkg manifest-mode installs go under <project>/install/vcpkg/<triplet>/
+  set(VCPKG_INSTALLED_DIR "${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/vcpkg"
+      CACHE PATH "vcpkg installs directory")
   message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+  message(STATUS "vcpkg installs directory: ${VCPKG_INSTALLED_DIR}")
 endif()
 
 # ---------------------------------------------------------------------------
