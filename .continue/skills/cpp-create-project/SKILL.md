@@ -33,26 +33,14 @@ All templates in `templates/` use these placeholders — replace every occurrenc
 
 ### Placeholder replacement safety (by design)
 
-The templates are constructed so that a **plain literal replacement of the
-placeholders above can never break anything**:
-
-- Every `@...@` token in `cmake/config.h.in` is a CMake `configure_file`
-  variable with a **fixed name containing no placeholders**
-  (`@PROJECT_VERSION@`, `@PROJECT_NAMESPACE@`, `@PROJECT_DEBUG@`,
-  `@PROJECT_GIT_COMMIT@`, `@PROJECT_BUILD_TIME@`). Placeholder replacement
-  therefore cannot touch them. Do not rename these variables or embed
-  placeholders inside `@...@`.
-- Source files reference the namespace via `<namespace-macro>_NS` (replaced
-  with `<PROJECT_NAME_UPPER>` at instantiation; the macro — defined in the
-  generated config.h — expands to the configurable namespace name), and
-  `#include` paths always use the concrete `<project-name>`.
-- Module CMakeLists come in two ready-to-use variants — no manual
-  uncommenting is ever needed:
-  - `templates/module-CMakeLists.txt.tmpl`: module with **no** module
-    dependencies (use for `core`).
-  - `templates/module-deps-CMakeLists.txt.tmpl`: module that **links
-    `${PROJECT_NAME}::core` PUBLIC** (use for `algorithm` and any other
-    module that includes core headers).
+A **plain literal replacement of the placeholders above can never break
+anything**: every `@...@` token in `cmake/config.h.in` is a CMake
+`configure_file` variable with a **fixed name containing no placeholders**
+(`@PROJECT_VERSION@`, `@PROJECT_NAMESPACE@`, `@PROJECT_DEBUG@`,
+`@PROJECT_GIT_COMMIT@`, `@PROJECT_BUILD_TIME@`) — do not rename these or
+embed placeholders inside `@...@`. Source files reference the namespace via
+`<namespace-macro>_NS` (replaced with `<PROJECT_NAME_UPPER>` at
+instantiation); only `#include` paths use the concrete `<project-name>`.
 
 ## Built-in conventions (already in the templates — do not re-implement)
 
@@ -117,7 +105,7 @@ placeholders above can never break anything**:
 │   │   ├── CMakeLists.txt
 │   │   ├── include/<project-name>/core/foo.hpp
 │   │   └── src/foo.cpp
-│   └── algorithm/                  # SHARED lib, links core, target <project>_algorithm
+│   └── algorithm/                  # links core, target <project>_algorithm
 │       ├── CMakeLists.txt
 │       ├── include/<project-name>/algorithm/foo.hpp
 │       └── src/foo.cpp
@@ -258,6 +246,6 @@ cmake --preset release && cmake --build --preset release && ctest --preset relea
 ```
 
 (Plain commands `cmake -B build && cmake --build build && ctest --test-dir build`
-also work — the release preset is the default configuration.)
+also work.)
 
 Report the created structure and how to build/run.

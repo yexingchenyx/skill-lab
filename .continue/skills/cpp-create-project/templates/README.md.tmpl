@@ -1,22 +1,30 @@
 # <project-name>
 
-C++ project built with CMake (C++<cxx-standard>).
+C++ project built with CMake (C++<cxx-standard>), vcpkg manifest mode.
 
 ## Build
 
+Presets are defined in `CMakePresets.json` (vcpkg toolchain and
+`BUILD_SHARED_LIBS=ON` wired in the `base` preset):
+
 ```bash
-cmake -B build
-cmake --build build
+cmake --preset release && cmake --build --preset release
+ctest --preset release          # run tests
 ```
+
+Available presets: `release`, `debug`, `release-static` / `debug-static`
+(static libraries, `BUILD_SHARED_LIBS=OFF`).
+
+Dependencies are installed automatically by vcpkg manifest mode at
+configure time (see `vcpkg.json`; versions pinned by
+`vcpkg-configuration.json`).
 
 ## Run
 
-Build artifacts go to `build/output/<config>/` (see `cmake/common.cmake`),
-e.g. `build/output/Release/` or `build/output/Debug/`:
+Build artifacts go to `build/output/<config>/` (see `cmake/common.cmake`):
 
 ```bash
 ./build/output/Release/bin/<project-name>
-cmake -B build -DCMAKE_BUILD_TYPE=Debug   # outputs to build/output/Debug/
 ```
 
 ## Build configuration
@@ -24,7 +32,9 @@ cmake -B build -DCMAKE_BUILD_TYPE=Debug   # outputs to build/output/Debug/
 `cmake/common.cmake` generates `<project-name>/config.h` (from
 `cmake/config.h.in`) into `build/output/<config>/include/`. It exposes the
 project version, build options (e.g. `<PROJECT_NAME_UPPER>_BUILD_TESTS`),
-git commit and build time. Include it uniformly as:
+the unified namespace (`<PROJECT_NAME_UPPER>_NS`), the library export macro
+(`<PROJECT_NAME_UPPER>_API`), git commit and build time. Include it
+uniformly as:
 
 ```cpp
 #include "<project-name>/config.h"

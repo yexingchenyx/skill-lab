@@ -29,5 +29,6 @@ Rules for each `<lib>.cmake` file:
 
 3. Do not leak include directories or definitions globally — keep everything
    attached to the namespaced target.
-4. Include the file from the top-level `CMakeLists.txt` (or another `cmake/`
-   module) before linking the target.
+4. Register the file in `cmake/thirdparty.cmake` with one `include(<lib>)`
+   line (that file is the entry point, already on `CMAKE_MODULE_PATH`), and
+   add the library to the `vcpkg.json` manifest.
