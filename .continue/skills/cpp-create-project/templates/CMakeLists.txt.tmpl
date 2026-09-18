@@ -12,6 +12,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(common)
 include(thirdparty)
+include(vendored)
+
+# Vendored third-party library sources (thirdparty/<name>/), each exposed as
+# an INTERFACE target ${PROJECT_NAME}::thirdparty::<name> via
+# <project-name>_add_vendored_thirdparty() from cmake/vendored.cmake.
+add_subdirectory(thirdparty)
 
 # src/CMakeLists.txt aggregates all modules (add_subdirectory per module).
 add_subdirectory(src)

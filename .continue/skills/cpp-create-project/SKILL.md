@@ -76,6 +76,8 @@ templates/thirdparty.cmake.tmpl            → cmake/thirdparty.cmake
 templates/thirdparty-README.md.tmpl        → cmake/thirdparty/README.md  (as-is)
 templates/thirdparty-googletest.cmake.tmpl → cmake/thirdparty/googletest.cmake
 templates/thirdparty-cli11.cmake.tmpl      → cmake/thirdparty/cli11.cmake  (as-is)
+templates/vendored.cmake.tmpl              → cmake/vendored.cmake  (as-is)
+templates/thirdparty-dir-CMakeLists.txt.tmpl → thirdparty/CMakeLists.txt  (as-is)
 templates/gitignore.tmpl                   → .gitignore  (as-is)
 templates/README.md.tmpl                   → README.md
 
@@ -135,7 +137,10 @@ implemented in the templates; do not re-implement them:
 ├── CMakePresets.json               # presets: release, debug, release-static, debug-static
 ├── vcpkg.json / vcpkg-configuration.json
 ├── cmake/                          # options.cmake (vcpkg toolchain, included BEFORE project()),
-│                                   # common.cmake, config.h.in, thirdparty.cmake, thirdparty/<lib>.cmake
+│                                   # common.cmake, config.h.in, thirdparty.cmake,
+│                                   # thirdparty/<lib>.cmake, vendored.cmake
+├── thirdparty/                     # vendored third-party sources, one dir per lib,
+│                                   # registered in thirdparty/CMakeLists.txt (may be empty)
 ├── src/<module>/                   # one self-contained dir per module (core, algorithm)
 │   ├── CMakeLists.txt              # target <project>_<module> + ALIAS <project>::<module>
 │   ├── include/<project-name>/<module>/
@@ -163,8 +168,21 @@ Key conventions (details are commented inside the templates):
   (`<lib>::<lib>`); never leak include dirs/definitions globally. Full rules:
   `cmake/thirdparty/README.md`. Keep `vcpkg.json` in sync when adding
   libraries via `cpp-add-thirdparty`.
-- **Dynamic vs static via presets**: `BUILD_SHARED_LIBS=ON` in the base
-  preset; `release-static`/`debug-static` set it OFF. Module CMakeLists use a
+- **Vendored third-party sources (`thirdparty/`)**: libraries whose source is
+  bundled directly in the repo live in `thirdparty/<name>/` (sources
+  unmodified — zero intrusion). Each is exposed as an INTERFACE target
+  `${PROJECT_NAME}::thirdparty::<name>` (e.g. `myapp::thirdparty::fmt`);
+  consumers link with
+  `target_link_libraries(<t> PUBLIC ${PROJECT_NAME}::thirdparty::<name>)`.
+  Registration happens ONLY in `thirdparty/CMakeLists.txt` via
+  `<project-name>_add_vendored_thirdparty(<name> SOURCE_DIR ... [TARGET ...]
+  [INCLUDE_DIRS ...] [LIBRARIES ...])` from `cmake/vendored.cmake` — never add
+  project-specific CMake glue inside `thirdparty/<name>/`. The helper does the
+  `add_subdirectory()` itself (skipped for header-only dirs), wraps the real
+  target in an INTERFACE target carrying all usage requirements, and fails on
+  duplicate registration. Never leak include dirs/definitions globally. Keep
+  the directory named `thirdparty/` (not `vendored/`).
+- **Dynamic vs static via presets**: `BUILD_SHARED_LIBS=ON` in the base preset; `release-static`/`debug-static` set it OFF. Module CMakeLists use a
   plain `add_library(...)` — no source edits needed to switch.
 - **Unified export macro**: single `<PROJECT_NAME_UPPER>_API` macro from the
   generated `config.h`; each module defines `<PROJECT_NAME_UPPER>_EXPORTS`

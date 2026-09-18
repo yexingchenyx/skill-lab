@@ -1,0 +1,86 @@
+# Helper for vendored third-party libraries (sources under thirdparty/<name>/).
+#
+# Every vendored library must be exposed as a single namespaced INTERFACE
+# target: ${PROJECT_NAME}::thirdparty::<name> (e.g. myapp::thirdparty::fmt).
+# Consumers link with:
+#   target_link_libraries(<target> PUBLIC ${PROJECT_NAME}::thirdparty::<name>)
+#
+# Usage — centrally, in thirdparty/CMakeLists.txt (NOT inside the library's
+# own directory, so vendored sources stay untouched / minimally invasive):
+#
+#   <project-name>_add_vendored_thirdparty(fmt
+#     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/fmt   # dir with its CMakeLists
+#     TARGET fmt)                                  # target it defines
+#
+#   # Header-only vendored library (no CMakeLists needed in the lib dir):
+#   <project-name>_add_vendored_thirdparty(json
+#     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/json
+#     INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/json/include)
+#
+#   # Raw sources without CMake support — build them here yourself, then pass
+#   # the resulting target / include dirs / libs as above.
+#
+# Rules:
+# - Never use include_directories()/add_definitions()/link_libraries() —
+#   everything is attached to the namespaced INTERFACE target only.
+# - The wrapper is INTERFACE, so usage requirements propagate to consumers;
+#   the actual compiled target (if any) stays private to thirdparty/.
+
+function(<project-name>_add_vendored_thirdparty name)
+  cmake_parse_arguments(ARG "" "SOURCE_DIR" "TARGET;INCLUDE_DIRS;LIBRARIES;DEFINITIONS;COMPILE_OPTIONS" ${ARGN})
+
+  if(NOT ARG_SOURCE_DIR)
+    message(FATAL_ERROR
+      "<project-name>_add_vendored_thirdparty(${name}): SOURCE_DIR is required — the "
+      "directory under thirdparty/ holding the library sources.")
+  endif()
+  if(NOT EXISTS ${ARG_SOURCE_DIR})
+    message(FATAL_ERROR
+      "<project-name>_add_vendored_thirdparty(${name}): SOURCE_DIR does not exist: ${ARG_SOURCE_DIR}")
+  endif()
+
+  set(_wrapper ${PROJECT_NAME}::thirdparty::${name})
+  if(TARGET ${_wrapper})
+    message(FATAL_ERROR "Vendored third-party target ${_wrapper} already exists.")
+  endif()
+
+  # Bring the vendored sources into the build (no-op for header-only libs
+  # without a CMakeLists.txt).
+  if(EXISTS ${ARG_SOURCE_DIR}/CMakeLists.txt)
+    add_subdirectory(${ARG_SOURCE_DIR} ${CMAKE_BINARY_DIR}/thirdparty/${name})
+  endif()
+
+  if(NOT ARG_TARGET AND NOT ARG_INCLUDE_DIRS AND NOT ARG_LIBRARIES)
+    message(FATAL_ERROR
+      "<project-name>_add_vendored_thirdparty(${name}): pass TARGET (a target defined "
+      "by the vendored CMakeLists), and/or INCLUDE_DIRS/LIBRARIES for "
+      "header-only or raw libraries.")
+  endif()
+
+  # CMake < 3.21 forbids '::' in add_library() names, so create a plain-named
+  # INTERFACE target and alias it to the namespaced name.
+  set(_wrapper_real ${PROJECT_NAME}_thirdparty_${name})
+  add_library(${_wrapper_real} INTERFACE)
+  add_library(${_wrapper} ALIAS ${_wrapper_real})
+
+  # The vendored compiled target is built here but consumers only see the
+  # wrapper; linking the real target propagates its usage requirements.
+  if(ARG_TARGET)
+    target_link_libraries(${_wrapper_real} INTERFACE ${ARG_TARGET})
+  endif()
+  if(ARG_INCLUDE_DIRS)
+    target_include_directories(${_wrapper_real} INTERFACE ${ARG_INCLUDE_DIRS})
+  endif()
+  if(ARG_LIBRARIES)
+    target_link_libraries(${_wrapper_real} INTERFACE ${ARG_LIBRARIES})
+  endif()
+  if(ARG_DEFINITIONS)
+    target_compile_definitions(${_wrapper_real} INTERFACE ${ARG_DEFINITIONS})
+  endif()
+  if(ARG_COMPILE_OPTIONS)
+    target_compile_options(${_wrapper_real} INTERFACE ${ARG_COMPILE_OPTIONS})
+  endif()
+
+  message(STATUS "Vendored third-party: ${_wrapper} "
+                 "(source: ${ARG_SOURCE_DIR}, wraps target(s): ${ARG_TARGET})")
+endfunction()

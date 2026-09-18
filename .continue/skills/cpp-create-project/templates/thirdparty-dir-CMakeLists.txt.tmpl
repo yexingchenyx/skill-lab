@@ -1,0 +1,27 @@
+# Vendored third-party library sources.
+#
+# Layout: one directory per library, thirdparty/<name>/, containing the
+# library source (with or without its own CMakeLists.txt).
+#
+# Convention: every vendored library is exposed as an INTERFACE target
+#   ${PROJECT_NAME}::thirdparty::<name>
+# (e.g. myapp::thirdparty::fmt) so consumers link with:
+#   target_link_libraries(<target> PUBLIC ${PROJECT_NAME}::thirdparty::<name>)
+#
+# Registration happens HERE only (via <project-name>_add_vendored_thirdparty from
+# cmake/vendored.cmake) — the vendored library directories themselves are
+# never modified with project-specific glue. If the library ships a
+# CMakeLists.txt it is add_subdirectory()'d as-is; otherwise pass
+# INCLUDE_DIRS/LIBRARIES (or build raw sources into a target here first).
+#
+# Nothing leaks globally: include dirs, definitions and libs are attached to
+# the namespaced target only.
+
+# Register vendored libraries here (one block each):
+# <project-name>_add_vendored_thirdparty(fmt
+#   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/fmt
+#   TARGET fmt)  # provides ${PROJECT_NAME}::thirdparty::fmt
+#
+# <project-name>_add_vendored_thirdparty(json
+#   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/json
+#   INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/json/include)  # header-only
