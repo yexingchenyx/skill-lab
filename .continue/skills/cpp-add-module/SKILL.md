@@ -76,7 +76,8 @@ cmake --preset release && cmake --build --preset release && ctest --preset relea
   (the single unified macro from the generated `config.h`); new modules
   need **no** `config.h` changes.
 - Namespaces use `<PROJECT_NAME_UPPER>_NS` (defined in the generated
-  `config.h`; expands from `PROJECT_NAMESPACE`, default = project name).
+  `config.h`; expands from `<PROJECT_NAME_UPPER>_NAMESPACE`, default =
+  project name).
 - `vcpkg.json` / `vcpkg-configuration.json` are **not** affected by adding
   a module (only third-party libraries are, via `cpp-add-thirdparty`).
 - The presets already wire the vcpkg toolchain (`options.cmake` sets

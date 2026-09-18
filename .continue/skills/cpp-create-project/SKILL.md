@@ -178,8 +178,9 @@ Key conventions (details are commented inside the templates):
 - **Headers**: path mirrors the module
   (`#include "<project-name>/<module-name>/<module-name>.hpp"`); every module
   header includes the generated `#include "<project-name>/config.h"`.
-- **Namespace**: unified via `PROJECT_NAMESPACE` (default: project name; set
-  in the base preset; override with `-DPROJECT_NAMESPACE=...`).
+- **Namespace**: unified via `<PROJECT_NAME_UPPER>_NAMESPACE` (default:
+  project name; set in the base preset; override with
+  `-D<PRJ>_NAMESPACE=...`).
 - **New module**: new `src/<mod>/` (CMakeLists from
   `templates/module-CMakeLists.txt.tmpl`, or
   `templates/module-deps-CMakeLists.txt.tmpl` if it depends on core) +

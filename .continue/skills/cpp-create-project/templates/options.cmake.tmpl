@@ -52,10 +52,11 @@ endif()
 
 # ---------------------------------------------------------------------------
 # Unified C++ namespace for all modules. Default: the project name — set
-# explicitly in CMakePresets.json's "base" preset (PROJECT_NAMESPACE is the
-# fixed configure_file variable name consumed by cmake/config.h.in; it must
-# NOT contain template placeholders). Override with -DPROJECT_NAMESPACE=...
+# explicitly in CMakePresets.json's "base" preset (<PROJECT_NAME_UPPER>_NAMESPACE
+# is the fixed configure_file variable name consumed by cmake/config.h.in; it
+# must NOT contain template placeholders). Override with
+# -D<PRJ>_NAMESPACE=...
 # ---------------------------------------------------------------------------
-if(NOT DEFINED PROJECT_NAMESPACE)
-  set(PROJECT_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
+if(NOT DEFINED <PROJECT_NAME_UPPER>_NAMESPACE)
+  set(<PROJECT_NAME_UPPER>_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
 endif()
