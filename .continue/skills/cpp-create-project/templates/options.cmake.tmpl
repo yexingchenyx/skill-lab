@@ -37,9 +37,11 @@ if(<PROJECT_NAME_UPPER>_USE_VCPKG)
 endif()
 
 # ---------------------------------------------------------------------------
-# Unified C++ namespace for all modules. Defaults to the project name;
-# override on the command line with -DPROJECT_NAMESPACE=...
-# (PROJECT_NAMESPACE is the fixed configure_file variable name consumed by
-# cmake/config.h.in — it must NOT contain template placeholders.)
+# Unified C++ namespace for all modules. Default: the project name — set
+# explicitly in CMakePresets.json's "base" preset (PROJECT_NAMESPACE is the
+# fixed configure_file variable name consumed by cmake/config.h.in; it must
+# NOT contain template placeholders). Override with -DPROJECT_NAMESPACE=...
 # ---------------------------------------------------------------------------
-set(PROJECT_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
+if(NOT DEFINED PROJECT_NAMESPACE)
+  set(PROJECT_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
+endif()

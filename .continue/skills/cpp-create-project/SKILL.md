@@ -176,10 +176,9 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
 - Every module header includes the generated config header:
   `#include "<project-name>/config.h"`.
 - Namespace: all modules use the unified namespace defined by
-  `PROJECT_NAMESPACE` in `cmake/options.cmake` (default: the project name).
-  In **all** source files, reference the namespace via the
-  `<namespace-macro>` placeholder; only `#include` paths use the concrete
-  `<project-name>`.
+  `PROJECT_NAMESPACE` (default: the project name — set explicitly in the
+  `CMakePresets.json` "base" preset and in `cmake/options.cmake`'s
+  fallback; override with `-DPROJECT_NAMESPACE=...`).
 - New module = new `src/<mod>/` dir (CMakeLists from
   `templates/module-CMakeLists.txt.tmpl` if no module dependencies, or
   `templates/module-deps-CMakeLists.txt.tmpl` if it depends on core) +
