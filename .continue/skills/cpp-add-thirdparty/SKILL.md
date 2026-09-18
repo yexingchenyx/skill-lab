@@ -135,7 +135,8 @@ by the `cpp-create-project` skill (CMake, modular `src/<module>/` layout).
    Note: when the project uses vcpkg (`<PROJECT_NAME_UPPER>_USE_VCPKG=ON` in
    the base preset; `options.cmake` sets `CMAKE_TOOLCHAIN_FILE` before
    `project()`), manifest-mode dependencies are installed into
-   `vcpkg_installed/<triplet>/` at the project root (outside `build/`) and
+   `<project>/install/vcpkg/<triplet>/` (`<PRJ>_DOWNLOAD_ROOT/vcpkg`, set in
+   `cmake/options.cmake`; outside `build/`) and
    `find_package` resolves them there automatically — the local-first logic
    above just works.
 
