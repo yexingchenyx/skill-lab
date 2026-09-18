@@ -52,38 +52,19 @@ endif()
 string(TIMESTAMP PROJECT_BUILD_TIME "%Y-%m-%dT%H:%M:%SZ" UTC)
 
 # ---------------------------------------------------------------------------
-# Generate the build configuration header into the per-config output dir.
-# All targets must include it as: #include "<project-name>/config.h"
+# Generate the build configuration header into <source-dir>/include/
+# (generated, git-ignored). All targets must include it as:
+#   #include "<project-name>/config.h"
 # ---------------------------------------------------------------------------
 # PROJECT_DEBUG is 1 for Debug builds, 0 otherwise.
-# Multi-config: set per configuration inside the loop below.
-# NOTE: all variables consumed by configure_file (PROJECT_*) use fixed names
-# without template placeholders, so config.h.in's @...@ tokens are safe.
-if(NOT CMAKE_CONFIGURATION_TYPES)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(PROJECT_DEBUG 1)
-  else()
-    set(PROJECT_DEBUG 0)
-  endif()
-  set(<PROJECT_NAME_UPPER>_CONFIG_DIR ${<PROJECT_NAME_UPPER>_OUTPUT_DIR}/include)
-  configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.h.in
-    ${<PROJECT_NAME_UPPER>_CONFIG_DIR}/<project-name>/config.h
-    @ONLY
-  )
+set(<PROJECT_NAME_UPPER>_CONFIG_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  set(PROJECT_DEBUG 1)
 else()
-  # Multi-config: generate one config.h per configuration.
-  foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-    if(OUTPUTCONFIG STREQUAL "Debug")
-      set(PROJECT_DEBUG 1)
-    else()
-      set(PROJECT_DEBUG 0)
-    endif()
-    configure_file(
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.h.in
-      ${CMAKE_BINARY_DIR}/output/${OUTPUTCONFIG}/include/<project-name>/config.h
-      @ONLY
-    )
-  endforeach()
-  set(<PROJECT_NAME_UPPER>_CONFIG_DIR ${CMAKE_BINARY_DIR}/output/$<CONFIG>/include)
+  set(PROJECT_DEBUG 0)
 endif()
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/config.h.in
+  ${<PROJECT_NAME_UPPER>_CONFIG_DIR}/<project-name>/config.h
+  @ONLY
+)

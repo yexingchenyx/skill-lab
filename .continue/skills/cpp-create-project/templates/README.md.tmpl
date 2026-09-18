@@ -30,7 +30,7 @@ Build artifacts go to `build/output/<config>/` (see `cmake/common.cmake`):
 ## Build configuration
 
 `cmake/common.cmake` generates `<project-name>/config.h` (from
-`cmake/config.h.in`) into `build/output/<config>/include/`. It exposes the
+`cmake/config.h.in`) into `<source-dir>/include/` (git-ignored). It exposes the
 project version, build options (e.g. `<PROJECT_NAME_UPPER>_BUILD_TESTS`),
 the unified namespace (`<PROJECT_NAME_UPPER>_NS`), the library export macro
 (`<PROJECT_NAME_UPPER>_API`), git commit and build time. Include it
