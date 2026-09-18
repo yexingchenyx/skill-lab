@@ -173,7 +173,7 @@ Key conventions (details are commented inside the templates):
   aliases (e.g. `algorithm` links `<project-name>::core` PUBLIC). The app and
   tests link `${PROJECT_NAME}_lib`; CLI executables link
   `<project-name>::cli_common`.
-- **tests/common** (`test_common`) must be added via
+- **tests/common** (`<project>_test_common`) must be added via
   `add_subdirectory(common)` before module test subdirectories.
 - **Headers**: path mirrors the module
   (`#include "<project-name>/<module-name>/<module-name>.hpp"`); every module
