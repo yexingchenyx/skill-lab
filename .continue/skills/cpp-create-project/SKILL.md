@@ -149,9 +149,12 @@ Key conventions (details are commented inside the templates):
 - **vcpkg (default ON)**: base preset sets `<PROJECT_NAME_UPPER>_USE_VCPKG=ON`
   and `<PROJECT_NAME_UPPER>_VCPKG_ROOT`; `options.cmake` sets
   `CMAKE_TOOLCHAIN_FILE` and must be included before `project()`.
-  `vcpkg.json` must keep `builtin-baseline` (hardcoded in the template).
-  Deps install into `vcpkg_installed/<triplet>/` at the project root
-  (`VCPKG_INSTALLED_DIR` in the base preset), shared across presets.
+  `vcpkg-configuration.json` must keep `default-registry.baseline`
+  (hardcoded in the template) — it is the single source of the baseline;
+  `vcpkg.json` intentionally has no `builtin-baseline`.
+  Deps install into `<project>/install/vcpkg/<triplet>/`
+  (`<PRJ>_DOWNLOAD_ROOT/vcpkg`, set in `cmake/options.cmake`), shared
+  across presets.
 - **Third-party local-first**: each `cmake/thirdparty/<lib>.cmake` tries
   `find_package(<lib> QUIET)` first, falls back to `FetchContent`, and prints
   a STATUS summary. When `FetchContent` is used, `FETCHCONTENT_BASE_DIR` is
