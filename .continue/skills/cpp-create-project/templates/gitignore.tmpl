@@ -3,6 +3,9 @@ build/
 build-*/
 cmake-build-*/
 out/
+# vcpkg manifest-mode installs (kept outside build/ so they survive
+# `rm -rf build` and are shared across presets)
+vcpkg_installed/
 cmake_install.cmake
 CMakeCache.txt
 CMakeFiles/

@@ -51,8 +51,10 @@ instantiation); only `#include` paths use the concrete `<project-name>`.
   from `<PROJECT_NAME_UPPER>_VCPKG_ROOT` — the toolchain must be active
   before the first `project()` call, which is why the include order matters.
 - **`vcpkg.json` manifest**: lists default deps (`cli11`, `gtest >= 1.14.0`);
-  vcpkg installs them into `build/vcpkg_installed/<triplet>/` at configure
-  time. Keep in sync when adding libraries via `cpp-add-thirdparty`.
+  vcpkg installs them into `vcpkg_installed/<triplet>/` at the project root
+  (`VCPKG_INSTALLED_DIR` set in the base preset — outside `build/` so
+  installs survive `rm -rf build` and are shared across presets). Keep in
+  sync when adding libraries via `cpp-add-thirdparty`.
 - **`vcpkg-configuration.json`**: pins the version baseline (lockfile for
   reproducible dependency versions). Obtain the baseline with
   `git -C <vcpkg-root> rev-parse HEAD` at generation time (fall back to the
