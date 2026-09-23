@@ -169,12 +169,15 @@ Do not run the script. Instead, hand it to the user with:
 
 ## Optional: Vim Esc keybindings template
 
-If the default set includes `vscodevim.vim`, give the user the bundled template
+If the default set includes `vscodevim.vim`, copy the bundled template
 `templates/vim-esc-keybindings.settings.jsonc` (relative to this skill's
-directory). It maps `jj`, `kk`, `jk`, `kj` to `<Esc>` in insert mode.
+directory) to the output directory as
+`./.cache/vscode-extensions-download/vim-esc-keybindings.settings.jsonc`,
+and tell the user where it is and how to apply it. It maps `jj`, `kk`, `jk`,
+`kj` to `<Esc>` in insert mode.
 
 Usage:
-1. Show/copy the template contents to the user.
+1. Copy the template to the output directory (so it ships with the script).
 2. Target file is the user settings file for the target OS:
    - Windows: `%APPDATA%\Code\User\settings.json`
    - macOS: `~/Library/Application Support/Code/User/settings.json`
@@ -195,6 +198,7 @@ copied config with the user-specified values, and hand the script to the user
 mkdir -p ./.cache/vscode-extensions-download
 cp <skill-dir>/templates/download_vscode_extensions.py ./.cache/vscode-extensions-download/
 cp <skill-dir>/templates/default-extensions.json ./.cache/vscode-extensions-download/
+cp <skill-dir>/templates/vim-esc-keybindings.settings.jsonc ./.cache/vscode-extensions-download/
 # then edit ./.cache/vscode-extensions-download/default-extensions.json:
 #   "vscodeVersion": "1.138.0", "targetPlatform": "linux-x64"
 ```
