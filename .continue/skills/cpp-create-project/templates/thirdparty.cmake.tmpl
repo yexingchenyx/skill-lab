@@ -6,11 +6,12 @@
 # Keep FetchContent downloads/builds outside build/ so they survive
 # `rm -rf build` and are shared across presets and build types.
 # Individual <lib>.cmake files can rely on this being set already.
-# NOTE: must be a CACHE variable (FORCE) — FetchContent.cmake initializes
-# FETCHCONTENT_BASE_DIR as a CACHE PATH defaulting to ${CMAKE_BINARY_DIR}/_deps,
-# and a plain set() would not override the cached value.
-set(FETCHCONTENT_BASE_DIR ${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/fetchcontent
-    CACHE PATH "FetchContent downloads/builds root (outside build/)" FORCE)
+# Plain (non-cache) variable: always derived from <PRJ>_DOWNLOAD_ROOT so it
+# stays in sync when DOWNLOAD_ROOT is overridden. FetchContent only sets its
+# own CACHE default when FETCHCONTENT_BASE_DIR is undefined, and a normal
+# variable shadows any stale cache entry — so plain set() is sufficient here
+# (it is set before any include(FetchContent) in the <lib>.cmake files).
+set(FETCHCONTENT_BASE_DIR ${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/fetchcontent)
 file(MAKE_DIRECTORY ${FETCHCONTENT_BASE_DIR})
 
 include(cli11)  # provides CLI11::CLI11 (command-line parsing, always on)

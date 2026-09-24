@@ -44,8 +44,11 @@ if(<PROJECT_NAME_UPPER>_USE_VCPKG)
   set(CMAKE_TOOLCHAIN_FILE "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       CACHE FILEPATH "vcpkg toolchain file")
   # vcpkg manifest-mode installs go under <project>/install/vcpkg/<triplet>/
-  set(VCPKG_INSTALLED_DIR "${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/vcpkg"
-      CACHE PATH "vcpkg installs directory")
+  # Plain (non-cache) variable: always derived from <PRJ>_DOWNLOAD_ROOT, so it
+  # stays in sync when DOWNLOAD_ROOT is overridden (-D<PRJ>_DOWNLOAD_ROOT=...).
+  # A cache entry would keep a stale path; to override, set
+  # -DVCPKG_INSTALLED_DIR=... AND -D<PRJ>_DOWNLOAD_ROOT=... consistently.
+  set(VCPKG_INSTALLED_DIR "${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/vcpkg")
   message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
   message(STATUS "vcpkg installs directory: ${VCPKG_INSTALLED_DIR}")
 endif()
