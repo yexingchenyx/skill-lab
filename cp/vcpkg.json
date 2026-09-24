@@ -1,0 +1,8 @@
+{
+  "name": "cp",
+  "version": "0.1.0",
+  "dependencies": [
+    "cli11",
+    { "name": "gtest", "version>=": "1.14.0" }
+  ]
+}

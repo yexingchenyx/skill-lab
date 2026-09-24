@@ -1,0 +1,23 @@
+# Third-party libraries entry point.
+# Each third-party dependency lives in cmake/thirdparty/<lib>.cmake and must
+# expose a namespaced target (e.g. re2::re2) per cmake/thirdparty/README.md.
+# Add one include() line per library you use.
+
+# Keep FetchContent downloads/builds outside build/ so they survive
+# `rm -rf build` and are shared across presets and build types.
+# Individual <lib>.cmake files can rely on this being set already.
+# Plain (non-cache) variable: always derived from <PRJ>_DOWNLOAD_ROOT so it
+# stays in sync when DOWNLOAD_ROOT is overridden. FetchContent only sets its
+# own CACHE default when FETCHCONTENT_BASE_DIR is undefined, and a normal
+# variable shadows any stale cache entry — so plain set() is sufficient here
+# (it is set before any include(FetchContent) in the <lib>.cmake files).
+set(FETCHCONTENT_BASE_DIR ${CP_DOWNLOAD_ROOT}/fetchcontent)
+file(MAKE_DIRECTORY ${FETCHCONTENT_BASE_DIR})
+
+include(cli11)  # provides CLI11::CLI11 (command-line parsing, always on)
+
+if(CP_BUILD_TESTS)
+  include(googletest)  # provides GTest::gtest_main
+endif()
+
+# include(thirdparty-re2)         # example: provides re2::re2

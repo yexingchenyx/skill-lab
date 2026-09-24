@@ -14,55 +14,55 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
-option(<PROJECT_NAME_UPPER>_BUILD_TESTS "Build unit tests" ON)
-option(<PROJECT_NAME_UPPER>_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
+option(CP_BUILD_TESTS "Build unit tests" ON)
+option(CP_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
 
 # ---------------------------------------------------------------------------
 # Unified C++ namespace for all modules. Default: the project name — set
-# explicitly in CMakePresets.json's "base" preset (<PROJECT_NAME_UPPER>_NAMESPACE
+# explicitly in CMakePresets.json's "base" preset (CP_NAMESPACE
 # is the fixed configure_file variable name consumed by cmake/config.h.in; it
 # must NOT contain template placeholders). Override with
 # -D<PRJ>_NAMESPACE=...
 # ---------------------------------------------------------------------------
-if(NOT DEFINED <PROJECT_NAME_UPPER>_NAMESPACE)
-  set(<PROJECT_NAME_UPPER>_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
+if(NOT DEFINED CP_NAMESPACE)
+  set(CP_NAMESPACE "cp" CACHE STRING "C++ namespace for all modules")
 endif()
 
 # ---------------------------------------------------------------------------
 # Download / install root for out-of-build artifacts.
 # Default: ~/install — vcpkg manifest-mode installs go to
-# ~/install/<project-name>/vcpkg/<triplet>/, FetchContent goes to
-# ~/install/<project-name>/fetchcontent (see cmake/thirdparty.cmake).
+# ~/install/cp/vcpkg/<triplet>/, FetchContent goes to
+# ~/install/cp/fetchcontent (see cmake/thirdparty.cmake).
 # Override with -D<PRJ>_DOWNLOAD_ROOT=...
 # ---------------------------------------------------------------------------
-set(<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT "$ENV{HOME}/install/<project-name>"
+set(CP_DOWNLOAD_ROOT "$ENV{HOME}/install/cp"
     CACHE PATH "Root directory for vcpkg installs and FetchContent downloads")
 
 # ---------------------------------------------------------------------------
 # vcpkg support.
 # This file is included BEFORE project() from the top-level CMakeLists.txt,
 # so setting CMAKE_TOOLCHAIN_FILE here is effective for the first project()
-# call. The vcpkg root comes from <PROJECT_NAME_UPPER>_VCPKG_ROOT (set in
+# call. The vcpkg root comes from CP_VCPKG_ROOT (set in
 # CMakePresets.json's "base" preset; override with -D<PRJ>_VCPKG_ROOT=...).
 # ---------------------------------------------------------------------------
-option(<PROJECT_NAME_UPPER>_USE_VCPKG "Use vcpkg for dependency management" ON)
-set(<PROJECT_NAME_UPPER>_VCPKG_ROOT "$ENV{HOME}/vcpkg" CACHE PATH "Path to the vcpkg installation root")
+option(CP_USE_VCPKG "Use vcpkg for dependency management" ON)
+set(CP_VCPKG_ROOT "$ENV{HOME}/vcpkg" CACHE PATH "Path to the vcpkg installation root")
 
-if(<PROJECT_NAME_UPPER>_USE_VCPKG)
-  if(NOT EXISTS "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+if(CP_USE_VCPKG)
+  if(NOT EXISTS "${CP_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
     message(FATAL_ERROR
-      "<PROJECT_NAME_UPPER>_USE_VCPKG is ON but the vcpkg toolchain was not found at "
-      "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake — "
-      "set <PROJECT_NAME_UPPER>_VCPKG_ROOT to your vcpkg installation directory.")
+      "CP_USE_VCPKG is ON but the vcpkg toolchain was not found at "
+      "${CP_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake — "
+      "set CP_VCPKG_ROOT to your vcpkg installation directory.")
   endif()
-  set(CMAKE_TOOLCHAIN_FILE "${<PROJECT_NAME_UPPER>_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+  set(CMAKE_TOOLCHAIN_FILE "${CP_VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       CACHE FILEPATH "vcpkg toolchain file")
   # vcpkg manifest-mode installs go under ~/install/vcpkg/<triplet>/
   # Plain (non-cache) variable: always derived from <PRJ>_DOWNLOAD_ROOT, so it
   # stays in sync when DOWNLOAD_ROOT is overridden (-D<PRJ>_DOWNLOAD_ROOT=...).
   # A cache entry would keep a stale path; to override, set
   # -DVCPKG_INSTALLED_DIR=... AND -D<PRJ>_DOWNLOAD_ROOT=... consistently.
-  set(VCPKG_INSTALLED_DIR "${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/vcpkg")
+  set(VCPKG_INSTALLED_DIR "${CP_DOWNLOAD_ROOT}/vcpkg")
   message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
   message(STATUS "vcpkg installs directory: ${VCPKG_INSTALLED_DIR}")
 endif()

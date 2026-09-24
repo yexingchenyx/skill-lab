@@ -154,7 +154,7 @@ Key conventions (details are commented inside the templates):
 
 - **vcpkg (default ON)**: base preset sets `<PROJECT_NAME_UPPER>_USE_VCPKG=ON`,
   `<PROJECT_NAME_UPPER>_VCPKG_ROOT`, and
-  `<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT=${sourceDir}/install` (default
+  `<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT=$env{HOME}/install` (default
   download/install root; override with `-D<PRJ>_DOWNLOAD_ROOT=...`);
   `options.cmake` declares all user-customizable options in one place
   (build type default, `BUILD_TESTS`, `WARNINGS_AS_ERRORS`, `NAMESPACE`,
@@ -164,7 +164,7 @@ Key conventions (details are commented inside the templates):
   `vcpkg-configuration.json` must keep `default-registry.baseline`
   (hardcoded in the template) — it is the single source of the baseline;
   `vcpkg.json` intentionally has no `builtin-baseline`.
-  Deps install into `<project>/install/vcpkg/<triplet>/`
+  Deps install into `~/install/vcpkg/<triplet>/`
   (`<PRJ>_DOWNLOAD_ROOT/vcpkg`, set in `cmake/options.cmake`), shared
   across presets.
 - **Third-party local-first**: each `cmake/thirdparty/<lib>.cmake` tries

@@ -1,0 +1,23 @@
+// cli/foo — demo CLI tool built on cli_common (CLI11 + project modules).
+#include <CLI/CLI.hpp>
+#include <iostream>
+
+#include <cp/core/foo.hpp>
+#include <cp/algorithm/foo.hpp>
+
+int main(int argc, char** argv) {
+  CLI::App app{"cp foo — demo CLI tool"};
+
+  std::string name = "world";
+  int a = 0, b = 0;
+  app.add_option("-n,--name", name, "Name to greet")->capture_default_str();
+  app.add_option("-a", a, "First addend")->capture_default_str();
+  app.add_option("-b", b, "Second addend")->capture_default_str();
+
+  CLI11_PARSE(app, argc, argv);
+
+  std::cout << CP_NS::core::Greeter(name).greet() << "\n";
+  std::cout << "greet_sum = "
+            << CP_NS::algorithm::greet_sum(name, a, b) << "\n";
+  return 0;
+}

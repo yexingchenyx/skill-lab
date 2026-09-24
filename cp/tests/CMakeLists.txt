@@ -1,0 +1,10 @@
+# tests/: test binaries, one per module. Each module's tests are added via
+# add_subdirectory from here. Google Test is fetched/loaded via
+# cmake/thirdparty.cmake when CP_BUILD_TESTS is ON.
+# Note: enable_testing() is called in the top-level CMakeLists.txt
+# (inside the BUILD_TESTS if-block) so ctest works from the build root.
+
+# Shared test utilities library (must come first — test targets link it).
+add_subdirectory(common)
+add_subdirectory(core)
+add_subdirectory(algorithm)

@@ -1,0 +1,35 @@
+# Google Test (default test framework).
+# Strategy: prefer a locally installed GTest (find_package);
+# fall back to FetchContent only if not found.
+# Provides namespaced targets GTest::gtest_main, GTest::gtest.
+# Loaded from cmake/thirdparty.cmake when CP_BUILD_TESTS is ON.
+
+find_package(GTest QUIET)
+
+if(NOT GTest_FOUND)
+  message(STATUS "GTest not found locally — fetching via FetchContent")
+  include(FetchContent)
+  # FETCHCONTENT_BASE_DIR is set in cmake/thirdparty.cmake (dep_installed/,
+  # outside build/) — downloads survive `rm -rf build`.
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+  )
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+endif()
+# googletest already provides the namespaced targets
+# GTest::gtest_main and GTest::gtest — nothing more to alias.
+
+# Final summary: version and location of the GTest actually used.
+if(TARGET GTest::gtest)
+  get_target_property(_gtest_inc GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(_gtest_loc GTest::gtest LOCATION)
+  if(GTest_FOUND)
+    set(_gtest_src "vcpkg/local install")
+  else()
+    set(_gtest_src "built from source (FetchContent)")
+  endif()
+  message(STATUS "GTest version: ${GTest_VERSION} (${_gtest_src}) | include: ${_gtest_inc} | target: ${_gtest_loc}")
+endif()

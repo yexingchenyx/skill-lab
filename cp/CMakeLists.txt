@@ -1,0 +1,49 @@
+cmake_minimum_required(VERSION 3.14)
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+                             ${CMAKE_CURRENT_SOURCE_DIR}/cmake/thirdparty)
+# options MUST be included before project(): when <PRJ>_USE_VCPKG is ON it
+# sets CMAKE_TOOLCHAIN_FILE (from <PRJ>_VCPKG_ROOT) so the vcpkg toolchain
+# is active for the first project() call.
+include(options)
+project(cp VERSION 0.1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(common)
+include(thirdparty)
+include(vendored)
+
+# Vendored third-party library sources (thirdparty/<name>/), each exposed as
+# an INTERFACE target ${PROJECT_NAME}::thirdparty::<name> via
+# cp_add_vendored_thirdparty() from cmake/vendored.cmake.
+add_subdirectory(thirdparty)
+
+# src/CMakeLists.txt aggregates all modules (add_subdirectory per module).
+add_subdirectory(src)
+# Aggregate target: links all modules so consumers/tests can depend on one
+# target. New modules should also be linked here.
+add_library(${PROJECT_NAME}_lib INTERFACE)
+target_link_libraries(${PROJECT_NAME}_lib INTERFACE
+  ${PROJECT_NAME}::core
+  ${PROJECT_NAME}::algorithm)
+# Namespaced alias: consumers link cp::cp_lib
+add_library(${PROJECT_NAME}::${PROJECT_NAME}_lib ALIAS ${PROJECT_NAME}_lib)
+# Generated config header (from cmake/common.cmake)
+target_include_directories(${PROJECT_NAME}_lib INTERFACE ${CP_CONFIG_DIR})
+# CLI tools: cli/common provides a shared CLI utilities library
+# (links CLI11::CLI11 and the project aggregate lib).
+add_subdirectory(cli)
+# Enable tests. Google Test is fetched/loaded via cmake/thirdparty.cmake
+# when CP_BUILD_TESTS is ON.
+#
+# Test layout: tests/<module>/ holds the tests for each module
+# (mirrors src/<module>/include/cp/<module>/). Each module's
+# tests are added via add_subdirectory from tests/CMakeLists.txt.
+if(CP_BUILD_TESTS)
+  # enable_testing() at the top level so the top-level build dir gets a
+  # CTestTestfile.cmake and `ctest --test-dir build` discovers all tests
+  # registered in subdirectories.
+  enable_testing()
+  add_subdirectory(tests)
+endif()

@@ -1,0 +1,18 @@
+#pragma once
+
+#include <string>
+#include <vector>
+
+// Shared CLI helpers (option parsing, usage text, etc.) built on CLI11.
+
+namespace CP_NS::cli {
+
+/// Join arguments into a single space-separated string (for usage/echo output).
+std::string join_args(const std::vector<std::string>& args);
+
+/// Build a simple usage line for a tool, e.g.
+///   make_usage("foo", {"--name", "--a", "--b"})
+/// -> "usage: foo [--name] [--a] [--b]"
+std::string make_usage(const std::string& tool, const std::vector<std::string>& options);
+
+}  // namespace CP_NS::cli
