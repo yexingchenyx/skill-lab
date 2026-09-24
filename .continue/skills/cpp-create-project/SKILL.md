@@ -151,8 +151,11 @@ implemented in the templates; do not re-implement them:
 
 Key conventions (details are commented inside the templates):
 
-- **vcpkg (default ON)**: base preset sets `<PROJECT_NAME_UPPER>_USE_VCPKG=ON`
-  and `<PROJECT_NAME_UPPER>_VCPKG_ROOT`; `options.cmake` sets
+- **vcpkg (default ON)**: base preset sets `<PROJECT_NAME_UPPER>_USE_VCPKG=ON`,
+  `<PROJECT_NAME_UPPER>_VCPKG_ROOT`, and
+  `<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT=${sourceDir}/install` (default
+  download/install root; override with `-D<PRJ>_DOWNLOAD_ROOT=...`);
+  `options.cmake` sets
   `CMAKE_TOOLCHAIN_FILE` and must be included before `project()`.
   `vcpkg-configuration.json` must keep `default-registry.baseline`
   (hardcoded in the template) — it is the single source of the baseline;
