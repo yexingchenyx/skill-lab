@@ -1,5 +1,8 @@
 # Project build options and global configuration.
-# Included from the top-level CMakeLists.txt.
+# Included from the top-level CMakeLists.txt BEFORE project() so that
+# CMAKE_TOOLCHAIN_FILE (vcpkg) is effective for the first project() call.
+# All user-customizable options are declared here in one place; option()
+# cache variables may safely be defined before project().
 
 # ---------------------------------------------------------------------------
 # Build type (Debug / Release / RelWithDebInfo / MinSizeRel).
@@ -13,6 +16,17 @@ endif()
 
 option(<PROJECT_NAME_UPPER>_BUILD_TESTS "Build unit tests" ON)
 option(<PROJECT_NAME_UPPER>_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
+
+# ---------------------------------------------------------------------------
+# Unified C++ namespace for all modules. Default: the project name — set
+# explicitly in CMakePresets.json's "base" preset (<PROJECT_NAME_UPPER>_NAMESPACE
+# is the fixed configure_file variable name consumed by cmake/config.h.in; it
+# must NOT contain template placeholders). Override with
+# -D<PRJ>_NAMESPACE=...
+# ---------------------------------------------------------------------------
+if(NOT DEFINED <PROJECT_NAME_UPPER>_NAMESPACE)
+  set(<PROJECT_NAME_UPPER>_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
+endif()
 
 # ---------------------------------------------------------------------------
 # Download / install root for out-of-build artifacts.
@@ -51,15 +65,4 @@ if(<PROJECT_NAME_UPPER>_USE_VCPKG)
   set(VCPKG_INSTALLED_DIR "${<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT}/vcpkg")
   message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
   message(STATUS "vcpkg installs directory: ${VCPKG_INSTALLED_DIR}")
-endif()
-
-# ---------------------------------------------------------------------------
-# Unified C++ namespace for all modules. Default: the project name — set
-# explicitly in CMakePresets.json's "base" preset (<PROJECT_NAME_UPPER>_NAMESPACE
-# is the fixed configure_file variable name consumed by cmake/config.h.in; it
-# must NOT contain template placeholders). Override with
-# -D<PRJ>_NAMESPACE=...
-# ---------------------------------------------------------------------------
-if(NOT DEFINED <PROJECT_NAME_UPPER>_NAMESPACE)
-  set(<PROJECT_NAME_UPPER>_NAMESPACE "<project-name>" CACHE STRING "C++ namespace for all modules")
 endif()

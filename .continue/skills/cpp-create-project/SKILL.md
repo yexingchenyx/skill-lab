@@ -136,7 +136,8 @@ implemented in the templates; do not re-implement them:
 ├── CMakeLists.txt                  # add_subdirectory per module; INTERFACE aggregate ${PROJECT_NAME}_lib
 ├── CMakePresets.json               # presets: release, debug, release-static, debug-static
 ├── vcpkg.json / vcpkg-configuration.json
-├── cmake/                          # options.cmake (vcpkg toolchain, included BEFORE project()),
+├── cmake/                          # options.cmake (all user options + vcpkg
+│                                   # toolchain, included BEFORE project()),
 │                                   # common.cmake, config.h.in, thirdparty.cmake,
 │                                   # thirdparty/<lib>.cmake, vendored.cmake
 ├── thirdparty/                     # vendored third-party sources, one dir per lib,
@@ -155,8 +156,11 @@ Key conventions (details are commented inside the templates):
   `<PROJECT_NAME_UPPER>_VCPKG_ROOT`, and
   `<PROJECT_NAME_UPPER>_DOWNLOAD_ROOT=${sourceDir}/install` (default
   download/install root; override with `-D<PRJ>_DOWNLOAD_ROOT=...`);
-  `options.cmake` sets
-  `CMAKE_TOOLCHAIN_FILE` and must be included before `project()`.
+  `options.cmake` declares all user-customizable options in one place
+  (build type default, `BUILD_TESTS`, `WARNINGS_AS_ERRORS`, `NAMESPACE`,
+  vcpkg settings) and sets `CMAKE_TOOLCHAIN_FILE`; it must be included
+  before `project()` so the vcpkg toolchain is effective for the first
+  `project()` call.
   `vcpkg-configuration.json` must keep `default-registry.baseline`
   (hardcoded in the template) — it is the single source of the baseline;
   `vcpkg.json` intentionally has no `builtin-baseline`.
