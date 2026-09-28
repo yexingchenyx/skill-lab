@@ -61,6 +61,20 @@ foreach ($pkg in $packages) {
                 $args = @('/S', '/silent', '/quiet', '/verysilent', '/norestart')
                 Start-Process $installer.FullName -ArgumentList $args -Wait
             }
+            '.msix' {
+                Add-AppxPackage -Path $installer.FullName
+            }
+            '.msixbundle' {
+                Add-AppxPackage -Path $installer.FullName
+            }
+            '.zip' {
+                # portable app: extract to a Tools folder next to the script
+                $dest = Join-Path $PSScriptRoot ("Tools\" + $installer.BaseName)
+                Write-Host "    extracting portable app to $dest"
+                if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Path $dest -Force | Out-Null }
+                Expand-Archive -Path $installer.FullName -DestinationPath $dest -Force
+                Write-Host "    [INFO] portable app extracted. Add $dest to PATH if needed." -ForegroundColor Yellow
+            }
             default {
                 Write-Host "    [WARN] unsupported installer type '$ext', opening interactively" -ForegroundColor Yellow
                 Start-Process $installer.FullName -Wait

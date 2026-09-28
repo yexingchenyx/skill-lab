@@ -1,6 +1,6 @@
 ---
 name: winget-installer
-description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg, WSL2, Cmder, and Windows Terminal.
+description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg, WSL2, and Windows Terminal.
 ---
 
 # Winget Offline Installer
@@ -19,7 +19,7 @@ offline on a target machine.
   set: Git, Python 3, CMake, Visual Studio 2022 Build Tools (C++ 编译环境),
   Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome,
   VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg,
-  WSL2, Cmder, Windows Terminal**
+  WSL2, Windows Terminal**
   from the bundled template `templates/default-packages.json` (relative to
   this skill's directory); otherwise use the user's list (winget package ids,
   e.g. `Notepad++.Notepad++`)
@@ -45,7 +45,7 @@ If the user specified a package list, update the copied
 - `Microsoft.VisualStudio.2022.BuildTools` — VS 2022 Build Tools with the
   `Microsoft.VisualStudio.Workload.VCTools` workload (C++ 编译环境), via the
   `override` field
-- `Snipaste.Snipaste` — Snipaste 截图工具
+- `liule.Snipaste` — Snipaste 截图工具
 - `Atlassian.Sourcetree` — Sourcetree Git 客户端
 - `voidtools.Everything` — Everything 文件搜索
 - `FastStone.Viewer` — FastStone Image Viewer 看图软件
@@ -59,7 +59,6 @@ If the user specified a package list, update the copied
 - `Daum.PotPlayer` — PotPlayer（视频播放器）
 - `x64dbg.x64dbg` — x64dbg（Windows 调试器）
 - `Microsoft.WSL` — WSL2（Windows Subsystem for Linux，需 Win10 19044+/Win11）
-- `cmder.cmder` — Cmder（便携终端模拟器）
 - `Microsoft.WindowsTerminal` — Windows Terminal（微软官方终端）
 
 Edit `default-packages.json` to change the default list — do not hardcode it
@@ -76,9 +75,15 @@ cd .\.cache\winget-offline
 ```
 
 The download script:
-- resolves the latest version of each package from the winget-pkgs manifest
-  API (GitHub; set `GITHUB_TOKEN` env var to avoid rate limits)
-- picks the x64 exe/msi installer URL from the installer manifest
+- resolves the latest version by scraping the winget-pkgs GitHub tree page
+  (**no API rate limit**); falls back to the GitHub contents API if scraping
+  fails (set `GITHUB_TOKEN` to raise the API limit to 5000/hr)
+- NOTE: the manifest path's first letter is lowercase (`Git.Git` ->
+  `manifests/g/Git/Git`) and GitHub tree URLs are case-sensitive
+- tries installer manifest names `<Id>.installer.yaml`, `installer.yaml`,
+  `<leaf>.installer.yaml`, then locale variants
+- picks the x64 exe/msi installer URL from the installer manifest (falls back
+  to x64 msixbundle, then any exe/msi, then x64 zip for portable apps)
 - skips already-downloaded files (`[SKIP]`); delete the file to force
   re-download
 - saves installers next to the script, named `{id}-{version}-{filename}`
@@ -96,9 +101,10 @@ machine, then run in an **Administrator** PowerShell:
 
 The install script:
 - skips packages already installed (checked via `winget list` when available)
-- installs `.msi` via `msiexec /i ... /norestart` and `.exe` with common
-  silent switches (`/S /silent /quiet /verysilent /norestart`); unsupported
-  types are opened interactively
+- installs `.msi` via `msiexec /i ... /norestart`, `.exe` with common
+  silent switches (`/S /silent /quiet /verysilent /norestart`),
+  `.msix`/`.msixbundle` via `Add-AppxPackage`, and `.zip` portable apps
+  extracted to a `Tools\` subfolder; anything else is opened interactively
 - applies the package's `override` arguments (e.g. the VS Build Tools
   workload selection)
 - falls back to `winget install --id <id> --exact --silent` if no local

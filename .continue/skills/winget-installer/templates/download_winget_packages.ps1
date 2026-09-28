@@ -29,28 +29,57 @@ if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir | Out
 
 $packages = (Get-Content $Config -Raw | ConvertFrom-Json).packages
 
+# winget-pkgs manifest path: first letter of the package id is LOWERCASE in the
+# repo directory structure (e.g. Git.Git -> manifests/g/Git/Git), and the rest
+# of the id maps dots to path segments. GitHub tree URLs are case-sensitive.
+function Get-ManifestDir([string]$PackageId) {
+    return ($PackageId.Substring(0,1).ToLower()) + "/" + ($PackageId -replace '\.', '/')
+}
+
 function Get-LatestVersion([string]$PackageId) {
-    # Resolve latest version from winget-pkgs repo via GitHub API
-    $api = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/" +
-           ($PackageId[0]) + "/" + ($PackageId -replace '\.', '/')
+    # Resolve latest version from winget-pkgs repo.
+    # Method 1 (preferred, no rate limit): scrape the GitHub tree HTML page
+    $dir = Get-ManifestDir $PackageId
+    $treeUrl = "https://github.com/microsoft/winget-pkgs/tree/master/manifests/" + $dir
+    try {
+        $resp = Invoke-WebRequest -Uri $treeUrl -Headers @{ 'User-Agent' = 'Mozilla/5.0' } -UseBasicParsing
+        $bytes = $resp.RawContentStream.ToArray()
+        $html = if ($bytes) { [Text.Encoding]::UTF8.GetString($bytes) } else { $resp.Content }
+        $prefix = "manifests/" + $dir + "/"
+        $versions = [regex]::Matches($html, [regex]::Escape($prefix) + '(\d+(?:\.\d+)*(?:-[\w.]+)?)') |
+            ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
+        if ($versions) {
+            return ($versions | Sort-Object { [version]($_ -replace '-.*$', '') })[-1]
+        }
+    } catch { Write-Host "    [WARN] HTML scrape failed ($($_.Exception.Message)), trying API fallback" -ForegroundColor Yellow }
+
+    # Method 2 (fallback): GitHub contents API (rate limited: 60/hr anonymous, 5000/hr with token)
+    $api = "https://api.github.com/repos/microsoft/winget-pkgs/contents/manifests/" + $dir
     $headers = @{ 'User-Agent' = 'winget-offline-downloader' }
     if ($env:GITHUB_TOKEN) { $headers['Authorization'] = "Bearer $env:GITHUB_TOKEN" }
     $items = Invoke-RestMethod -Uri $api -Headers $headers
     $versions = @($items | Where-Object { $_.name -match '^\d+(\.\d+)*(\-[\w.]+)?$' } |
         ForEach-Object { $_.name })
     if (-not $versions) { throw "No versions found for $PackageId" }
-    # naive sort; good enough for most packages
-    return ($versions | Sort-Object { [version]($_ -replace '-.*$', '') } -ErrorAction SilentlyContinue)[-1]
+    return ($versions | Sort-Object { [version]($_ -replace '-.*$', '') })[-1]
 }
 
 function Get-InstallerUrl([string]$PackageId, [string]$Version) {
     $base = "https://raw.githubusercontent.com/microsoft/winget-pkgs/master/manifests/" +
-            ($PackageId[0]) + "/" + ($PackageId -replace '\.', '/') + "/$Version"
+            (Get-ManifestDir $PackageId) + "/$Version"
     $headers = @{ 'User-Agent' = 'winget-offline-downloader' }
-    # try locale variants of the installer manifest
-    foreach ($suffix in @('installer.yaml', 'zh-CN.installer.yaml', 'en-US.installer.yaml')) {
+    # try installer manifest: newer manifests are named "<Id>.installer.yaml",
+    # older ones just "installer.yaml"; also try locale variants
+    $leaf = $PackageId -replace '.*\.', ''
+    $suffixes = @("$PackageId.installer.yaml", 'installer.yaml', "$leaf.installer.yaml",
+                  "$PackageId.locale.zh-CN.installer.yaml", "$PackageId.locale.en-US.installer.yaml",
+                  'zh-CN.installer.yaml', 'en-US.installer.yaml') | Select-Object -Unique
+    foreach ($suffix in $suffixes) {
         try {
-            $yaml = (Invoke-WebRequest -Uri "$base/$suffix" -Headers $headers -UseBasicParsing).Content
+            $resp = Invoke-WebRequest -Uri "$base/$suffix" -Headers $headers -UseBasicParsing
+            # decode as UTF8 explicitly: .Content may be a byte[] or mis-decoded string
+            $bytes = $resp.RawContentStream.ToArray()
+            if ($bytes) { $yaml = [Text.Encoding]::UTF8.GetString($bytes) } else { $yaml = $resp.Content }
             break
         } catch { continue }
     }
@@ -58,9 +87,14 @@ function Get-InstallerUrl([string]$PackageId, [string]$Version) {
     # collect InstallerUrl entries
     $urls = [regex]::Matches($yaml, 'InstallerUrl:\s*(\S+)') | ForEach-Object { $_.Groups[1].Value }
     if (-not $urls) { throw "No InstallerUrl in manifest for $PackageId $Version" }
-    # prefer x64 exe/msi, then any
-    $pick = $urls | Where-Object { $_ -match 'x64' -and $_ -match '\.(exe|msi|msix|msixbundle|zip)$' } | Select-Object -First 1
-    if (-not $pick) { $pick = $urls | Where-Object { $_ -match '\.(exe|msi|msix|msixbundle)$' } | Select-Object -First 1 }
+    # prefer x64 exe/msi (most reliable for offline silent install), then
+    # x64 msix/msixbundle, then any exe/msi, then any msix, then x64 zip
+    # (portable, e.g. Snipaste/uv/x64dbg), then anything else
+    $pick = $urls | Where-Object { $_ -match 'x64|x86_64' -and $_ -notmatch 'i386|arm64|aarch64' -and $_ -match '\.(exe|msi)$' } | Select-Object -First 1
+    if (-not $pick) { $pick = $urls | Where-Object { $_ -match 'x64' -and $_ -match '\.(msix|msixbundle)$' } | Select-Object -First 1 }
+    if (-not $pick) { $pick = $urls | Where-Object { $_ -match '\.(exe|msi)$' } | Select-Object -First 1 }
+    if (-not $pick) { $pick = $urls | Where-Object { $_ -match '\.(msix|msixbundle)$' } | Select-Object -First 1 }
+    if (-not $pick) { $pick = $urls | Where-Object { $_ -match 'x64|x86_64' -and $_ -notmatch 'i386|arm64|aarch64' -and $_ -match '\.zip$' } | Select-Object -First 1 }
     if (-not $pick) { $pick = $urls[0] }
     return $pick
 }
