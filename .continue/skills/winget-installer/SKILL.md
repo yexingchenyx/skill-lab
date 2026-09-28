@@ -1,6 +1,6 @@
 ---
 name: winget-installer
-description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, and FreeCAD.
+description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg, and WSL2.
 ---
 
 # Winget Offline Installer
@@ -18,7 +18,8 @@ offline on a target machine.
 - Package list (optional) — if the user doesn't specify, use the **default
   set: Git, Python 3, CMake, Visual Studio 2022 Build Tools (C++ 编译环境),
   Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome,
-  VS Code, uv, KiCad, FreeCAD**
+  VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg,
+  WSL2**
   from the bundled template `templates/default-packages.json` (relative to
   this skill's directory); otherwise use the user's list (winget package ids,
   e.g. `Notepad++.Notepad++`)
@@ -53,6 +54,11 @@ If the user specified a package list, update the copied
 - `astral-sh.uv` — uv（Python 环境管理工具）
 - `KiCad.KiCad` — KiCad（EDA/PCB 设计）
 - `FreeCAD.FreeCAD` — FreeCAD（3D 建模/CAD）
+- `DigitalScholar.Zotero` — Zotero（文献管理）
+- `Foxit.FoxitReader` — Foxit PDF Reader（PDF 阅读）
+- `Daum.PotPlayer` — PotPlayer（视频播放器）
+- `x64dbg.x64dbg` — x64dbg（Windows 调试器）
+- `Microsoft.WSL` — WSL2（Windows Subsystem for Linux，需 Win10 19044+/Win11）
 
 Edit `default-packages.json` to change the default list — do not hardcode it
 in SKILL.md.

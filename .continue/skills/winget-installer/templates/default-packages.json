@@ -12,6 +12,11 @@
     { "id": "Microsoft.VisualStudioCode", "name": "Visual Studio Code" },
     { "id": "astral-sh.uv", "name": "uv (Python 环境管理)" },
     { "id": "KiCad.KiCad", "name": "KiCad" },
-    { "id": "FreeCAD.FreeCAD", "name": "FreeCAD" }
+    { "id": "FreeCAD.FreeCAD", "name": "FreeCAD" },
+    { "id": "DigitalScholar.Zotero", "name": "Zotero" },
+    { "id": "Foxit.FoxitReader", "name": "Foxit PDF Reader" },
+    { "id": "Daum.PotPlayer", "name": "PotPlayer" },
+    { "id": "x64dbg.x64dbg", "name": "x64dbg" },
+    { "id": "Microsoft.WSL", "name": "WSL2 (Windows Subsystem for Linux)", "override": "--web-download" }
   ]
 }
