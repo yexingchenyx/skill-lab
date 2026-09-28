@@ -1,6 +1,6 @@
 ---
 name: winget-installer
-description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg, and WSL2.
+description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg, WSL2, Cmder, and Windows Terminal.
 ---
 
 # Winget Offline Installer
@@ -19,7 +19,7 @@ offline on a target machine.
   set: Git, Python 3, CMake, Visual Studio 2022 Build Tools (C++ 编译环境),
   Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome,
   VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg,
-  WSL2**
+  WSL2, Cmder, Windows Terminal**
   from the bundled template `templates/default-packages.json` (relative to
   this skill's directory); otherwise use the user's list (winget package ids,
   e.g. `Notepad++.Notepad++`)
@@ -59,6 +59,8 @@ If the user specified a package list, update the copied
 - `Daum.PotPlayer` — PotPlayer（视频播放器）
 - `x64dbg.x64dbg` — x64dbg（Windows 调试器）
 - `Microsoft.WSL` — WSL2（Windows Subsystem for Linux，需 Win10 19044+/Win11）
+- `cmder.cmder` — Cmder（便携终端模拟器）
+- `Microsoft.WindowsTerminal` — Windows Terminal（微软官方终端）
 
 Edit `default-packages.json` to change the default list — do not hardcode it
 in SKILL.md.

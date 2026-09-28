@@ -17,6 +17,8 @@
     { "id": "Foxit.FoxitReader", "name": "Foxit PDF Reader" },
     { "id": "Daum.PotPlayer", "name": "PotPlayer" },
     { "id": "x64dbg.x64dbg", "name": "x64dbg" },
-    { "id": "Microsoft.WSL", "name": "WSL2 (Windows Subsystem for Linux)", "override": "--web-download" }
+    { "id": "Microsoft.WSL", "name": "WSL2 (Windows Subsystem for Linux)", "override": "--web-download" },
+    { "id": "cmder.cmder", "name": "Cmder" },
+    { "id": "Microsoft.WindowsTerminal", "name": "Windows Terminal" }
   ]
 }
