@@ -1,6 +1,6 @@
 ---
 name: winget-installer
-description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg, WSL2, and Windows Terminal.
+description: Download Windows software as offline installers via winget manifests (download script) and generate an offline install script for the target machine. Default package list includes Git, Python, CMake, the MSVC C++ build environment, Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome, VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg, WSL2, Windows Terminal, and Tabby.
 ---
 
 # Winget Offline Installer
@@ -19,7 +19,7 @@ offline on a target machine.
   set: Git, Python 3, CMake, Visual Studio 2022 Build Tools (C++ 编译环境),
   Snipaste, Sourcetree, Everything, FastStone Image Viewer, Google Chrome,
   VS Code, uv, KiCad, FreeCAD, Zotero, Foxit PDF Reader, PotPlayer, x64dbg,
-  WSL2, Windows Terminal**
+  WSL2, Windows Terminal, Tabby**
   from the bundled template `templates/default-packages.json` (relative to
   this skill's directory); otherwise use the user's list (winget package ids,
   e.g. `Notepad++.Notepad++`)
@@ -60,6 +60,7 @@ If the user specified a package list, update the copied
 - `x64dbg.x64dbg` — x64dbg（Windows 调试器）
 - `Microsoft.WSL` — WSL2（Windows Subsystem for Linux，需 Win10 19044+/Win11）
 - `Microsoft.WindowsTerminal` — Windows Terminal（微软官方终端）
+- `Eugeny.Tabby` — Tabby 终端（含 SSH 管理）
 
 Edit `default-packages.json` to change the default list — do not hardcode it
 in SKILL.md.

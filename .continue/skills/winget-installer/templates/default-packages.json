@@ -18,6 +18,7 @@
     { "id": "Daum.PotPlayer", "name": "PotPlayer" },
     { "id": "x64dbg.x64dbg", "name": "x64dbg" },
     { "id": "Microsoft.WSL", "name": "WSL2 (Windows Subsystem for Linux)", "override": "--web-download" },
-    { "id": "Microsoft.WindowsTerminal", "name": "Windows Terminal" }
+    { "id": "Microsoft.WindowsTerminal", "name": "Windows Terminal" },
+    { "id": "Eugeny.Tabby", "name": "Tabby (终端，含 SSH 管理)" }
   ]
 }
