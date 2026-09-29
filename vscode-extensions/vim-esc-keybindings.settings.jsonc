@@ -1,0 +1,22 @@
+// VS Code Vim extension: map jj / kk / jk / kj to Esc in insert mode.
+// Windows: merge into %APPDATA%\Code\User\settings.json
+// (VS Code -> F1 -> "Preferences: Open User Settings (JSON)")
+// If "vim.insertModeKeyBindings" already exists, merge these entries into
+// the existing array instead of replacing it. Reload the window afterwards.
+{
+  "vim.insertModeKeyBindings": [
+    // "silent": true suppresses the "jj" characters flashing in the editor
+    // before Esc is applied (recommended for Esc remaps).
+    { "before": ["j", "j"], "after": ["<Esc>"], "silent": true },
+    { "before": ["k", "k"], "after": ["<Esc>"], "silent": true },
+    { "before": ["j", "k"], "after": ["<Esc>"], "silent": true },
+    { "before": ["k", "j"], "after": ["<Esc>"], "silent": true }
+  ],
+  // Timeout (ms) for multi-key sequences like jj: how long the extension
+  // waits for the second key before inserting the first key literally.
+  // Lower = snappier Esc, but a fast typer may trigger it accidentally.
+  "vim.timeout": 300,
+  // Common QoL settings (remove if not wanted)
+  "vim.useSystemClipboard": true,
+  "vim.hlsearch": true
+}

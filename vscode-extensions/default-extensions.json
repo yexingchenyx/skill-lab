@@ -1,0 +1,32 @@
+{
+  "_comment": "Default VS Code extension download config. 'vscodeVersion': target VS Code version; 'targetPlatform': Marketplace targetPlatform (e.g. win32-x64, linux-x64); 'platformSpecific': extension ids that require targetPlatform; 'extensions': default ids to download.",
+  "vscodeVersion": "1.138.0",
+  "targetPlatform": "win32-x64",
+  "platformSpecific": [
+    "ms-vscode.cpptools",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-toolsai.jupyter"
+  ],
+  "extensions": [
+    "ms-vscode.cpptools",
+    "ms-vscode.cpptools-themes",
+    "ms-vscode.cmake-tools",
+    "twbs.cmake",
+    "ms-vscode.makefile-tools",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "ms-python.python-getting-started",
+    "ms-toolsai.jupyter",
+    "ms-toolsai.jupyter-keymap",
+    "ms-toolsai.jupyter-renderers",
+    "ms-toolsai.vscode-jupyter-cell-tags",
+    "ms-toolsai.vscode-jupyter-slideshow",
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+    "ms-vscode.markdown-language-features",
+    "vscodevim.vim"
+  ]
+}

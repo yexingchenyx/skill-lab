@@ -1,0 +1,24 @@
+{
+  "packages": [
+    { "id": "Git.Git", "name": "Git" },
+    { "id": "Python.Python.3.12", "name": "Python 3.12" },
+    { "id": "Kitware.CMake", "name": "CMake" },
+    { "id": "Microsoft.VisualStudio.2022.BuildTools", "name": "Visual Studio 2022 Build Tools (C++ 编译环境)", "override": "--add Microsoft.VisualStudio.Workload.VCTools --includeRecommended --quiet --wait" },
+    { "id": "liule.Snipaste", "name": "Snipaste" },
+    { "id": "Atlassian.Sourcetree", "name": "Sourcetree" },
+    { "id": "voidtools.Everything", "name": "Everything" },
+    { "id": "FastStone.Viewer", "name": "FastStone Image Viewer" },
+    { "id": "Google.Chrome", "name": "Google Chrome" },
+    { "id": "Microsoft.VisualStudioCode", "name": "Visual Studio Code" },
+    { "id": "astral-sh.uv", "name": "uv (Python 环境管理)" },
+    { "id": "KiCad.KiCad", "name": "KiCad" },
+    { "id": "FreeCAD.FreeCAD", "name": "FreeCAD" },
+    { "id": "DigitalScholar.Zotero", "name": "Zotero" },
+    { "id": "Foxit.FoxitReader", "name": "Foxit PDF Reader" },
+    { "id": "Daum.PotPlayer", "name": "PotPlayer" },
+    { "id": "x64dbg.x64dbg", "name": "x64dbg" },
+    { "id": "Microsoft.WSL", "name": "WSL2 (Windows Subsystem for Linux)", "override": "--web-download" },
+    { "id": "Microsoft.WindowsTerminal", "name": "Windows Terminal" },
+    { "id": "Eugeny.Tabby", "name": "Tabby (终端，含 SSH 管理)" }
+  ]
+}
